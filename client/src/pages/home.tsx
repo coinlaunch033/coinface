@@ -143,8 +143,16 @@ export default function Home() {
         formData.append("logo", data.logo[0]);
       }
 
+      console.log("Form data being sent:", {
+        tokenName: data.tokenName,
+        tokenAddress: step1Data.tokenAddress,
+        chain: step1Data.chain,
+        hasLogo: !!(data.logo && data.logo[0])
+      });
+
       await createTokenMutation.mutateAsync(formData);
     } catch (error) {
+      console.error("Token creation error:", error);
       toast({
         title: "Token creation failed",
         description: "Please try again.",
@@ -332,7 +340,7 @@ export default function Home() {
                         <FormItem>
                           <FormLabel className="text-lg font-semibold">Upload Meme Logo</FormLabel>
                           <FormControl>
-                            <div className="border-2 border-dashed border-white/30 rounded-lg p-8 text-center hover:border-purple-500 transition-all">
+                            <div className="border-2 border-dashed border-white border-opacity-30 rounded-lg p-8 text-center hover:border-purple-500 transition-all">
                               <div className="text-4xl mb-2">📷</div>
                               <div className="text-lg font-semibold mb-2">Drop your logo here</div>
                               <div className="text-sm text-gray-400 mb-4">PNG, JPEG up to 5MB</div>
@@ -365,7 +373,7 @@ export default function Home() {
                           <FormControl>
                             <Input
                               placeholder="e.g., PepeBlaster, ShibaMoon..."
-                              className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                              className="bg-white bg-opacity-10 border-white border-opacity-20 text-white placeholder:text-gray-400"
                               {...field}
                             />
                           </FormControl>
@@ -386,7 +394,7 @@ export default function Home() {
                       type="button"
                       variant="outline"
                       onClick={() => setCurrentStep(1)}
-                      className="w-full bg-white/10 hover:bg-white/20 border-white/20"
+                      className="w-full bg-white bg-opacity-10 hover:bg-white hover:bg-opacity-20 border-white border-opacity-20"
                     >
                       ← Back to Step 1
                     </Button>
