@@ -28,10 +28,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create token endpoint
   app.post("/api/tokens", upload.single('logo'), async (req, res) => {
     try {
+      console.log("Request body:", req.body);
+      console.log("Request file:", req.file);
+      
       const { tokenName, tokenAddress, chain, theme = "dark", buttonStyle = "rounded", fontStyle = "sans" } = req.body;
       
       // Validate required fields
       if (!tokenName || !tokenAddress || !chain) {
+        console.log("Missing fields - tokenName:", tokenName, "tokenAddress:", tokenAddress, "chain:", chain);
         return res.status(400).json({ 
           message: "Missing required fields: tokenName, tokenAddress, chain" 
         });
