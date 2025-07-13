@@ -1,0 +1,119 @@
+📱 Build a web3 meme coin auto-promotion platform called **MemeSite** with the following features:
+
+---
+
+## 🎯 Product Summary:
+Let users promote their meme coin in **2 easy steps**, pay a flat **$15 USD in any supported chain**, and get a **fully generated, shareable website** with dynamic styling, live links to major DEX tools, and social share options.
+
+---
+
+## 🧭 User Journey (2-Step Process):
+
+### Step 1 – Select Chain + Paste Token
+- Beautiful UI with animated meme-style background (floating emojis, meme gifs, or dynamic gradient)
+- Step 1 form asks:
+  - Chain selector (dropdown with emoji icons)
+    - Solana, Ethereum, Base, BNB Chain, Polygon
+  - Token address input
+
+- Proceed to Step 2
+
+---
+
+### Step 2 – Upload + Customize
+- Upload meme logo (PNG, JPEG)
+- Enter custom token name
+- Initiate payment using **Reown AppKit**:
+  - User pays **$15 USD equivalent** in native chain token (e.g., SOL, ETH, MATIC, BNB)
+  - Reown handles conversion + wallet connection
+  - On successful payment (via webhook), proceed to site generation
+
+---
+
+## 🧱 After Payment: Token Page Generation
+A dedicated page is created:  
+📄 `/coin/[token-name]`  
+(e.g. `/coin/pepeblaster`)
+
+Page includes:
+- Token logo (uploaded image)
+- Token name
+- Chain badge (Solana, Ethereum, etc.)
+- Full token address with "Copy" button
+- View buttons:
+  - DexScreener
+  - BirdEye (for Solana)
+  - GeckoTerminal
+  - GMGN
+  - Axiom
+  - Blockchain explorer (based on chain)
+- 🔗 Share buttons:
+  - Twitter (pre-filled tweet with link)
+  - Reddit
+  - Telegram
+  - Copy Link
+- 💡 Floating **lightbulb icon** showing **page view count**
+- 🚀 Optional animated background overlays (meme stars, emoji rain)
+
+---
+
+## 🎨 Styling Features (User-Controlled)
+Token creators can customize their public page via theme selector:
+- Background themes:
+  - Light, Dark, Meme Rainbow, Matrix Neon
+- Button shapes:
+  - Rounded, Pixel, Glow
+- Fonts:
+  - Comic Sans, Pixel Bit, Futuristic, Sans
+- All styling choices are saved and applied per-token
+
+---
+
+## 🛠 Tech Stack:
+- **Next.js** (dynamic routing, SEO-ready)
+- **Tailwind CSS** (for fully customizable themes)
+- **Framer Motion** (animations for form, buttons, backgrounds)
+- **Supabase**:
+  - For token page metadata
+  - Logo upload
+  - Theme settings
+  - Page view tracking
+- **Reown AppKit**:
+  - Flat $15 USD equivalent payment
+  - Native token pricing (SOL, ETH, BNB, MATIC)
+  - Handles wallet connections and confirmations
+
+---
+
+## 🔗 Routing:
+- `/`: Homepage with 2-step form and hero tagline
+- `/coin/[token-name]`: Public page
+- `/api/create-token`: Backend for validating token, payment webhook, and creating page
+- `/api/view-count`: Simple page view counter
+
+---
+
+## 🔎 SEO Optimized:
+- Dynamic title: `${TokenName} - MemeSite`
+- Open Graph tags:
+  - Token logo as preview
+  - Meta description: "Trade and showcase your meme coin with MemeSite"
+- Shareable URL: `https://memesite.xyz/coin/shibamoon`
+
+---
+
+## 💰 Monetization:
+- Flat $15 per token promotion
+- Upsell-ready:
+  - Add “Feature on homepage” upsell
+  - Add “Pin Telegram” badge
+  - NFT-style verified badge
+
+---
+
+## 🧠 Bonus Features:
+- Meme-friendly UI with emoji styles, neon glows, pixel hover effects
+- Chain selector in header (with logos)
+- View tracker with 💡 icon
+- All pages are **responsive**, mobile-optimized, and SEO-indexable
+- Hosted on Replit, Vercel, or similar platforms
