@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertTokenSchema, updateTokenThemeSchema } from "@shared/schema";
+import { insertTokenSchema, updateTokenThemeSchema, insertMemeDropEntrySchema } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
 import path from "path";
@@ -70,6 +70,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const token = await storage.createToken(validatedToken);
+      
+      // Automatically enter into MemeDrop when token is created
+      await storage.createMemeDropEntry({
+        walletAddress: `${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}`, // Mock wallet address
+        tokenName,
+        chain,
+        twitter: undefined,
+        email: undefined,
+      });
+      
       res.status(201).json(token);
     } catch (error) {
       console.error("Error creating token:", error);
@@ -176,6 +186,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error processing payment:", error);
       res.status(500).json({ message: "Payment processing failed" });
+    }
+  });
+
+  // MemeDrop API endpoints
+  app.get("/api/memedrop/entries", async (req, res) => {
+    try {
+      const count = await storage.getMemeDropEntryCount();
+      res.json(count);
+    } catch (error) {
+      console.error("Error fetching MemeDrop entry count:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/memedrop/entries", async (req, res) => {
+    try {
+      const validatedEntry = insertMemeDropEntrySchema.parse(req.body);
+      const entry = await storage.createMemeDropEntry(validatedEntry);
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error creating MemeDrop entry:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Invalid entry data", 
+          errors: error.errors 
+        });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/memedrop/entries/all", async (req, res) => {
+    try {
+      const entries = await storage.getAllMemeDropEntries();
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching all MemeDrop entries:", error);
+      res.status(500).json({ message: "Internal server error" });
     }
   });
 

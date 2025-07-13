@@ -7,6 +7,7 @@ interface Chain {
   symbol: string;
   icon: string;
   color: string;
+  realIcon?: string;
 }
 
 const chains: Chain[] = [

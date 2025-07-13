@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import FloatingEmojis from "@/components/floating-emojis";
 import ChainSelector from "@/components/chain-selector";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 
 const step1Schema = z.object({
   chain: z.string().min(1, "Please select a chain"),
@@ -187,6 +187,11 @@ export default function Home() {
         </div>
         
         <div className="flex items-center space-x-4">
+          <Link href="/memedrop">
+            <Button variant="ghost" className="hover:bg-white hover:bg-opacity-20 text-yellow-400">
+              🎁 MemeDrop
+            </Button>
+          </Link>
           <Button variant="ghost" className="hover:bg-white hover:bg-opacity-20">
             How it works
           </Button>

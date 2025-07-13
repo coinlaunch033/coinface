@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
-import { useParams } from "wouter";
+import { useParams, Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Link } from "wouter";
 import FloatingEmojis from "@/components/floating-emojis";
 import TokenCard from "@/components/token-card";
 import ThemeSelector from "@/components/theme-selector";
@@ -202,6 +201,27 @@ export default function TokenPage() {
               {window.location.href}
             </span>
           </p>
+        </motion.div>
+
+        {/* MemeDrop Banner */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.5, duration: 0.5 }}
+          className="mb-8"
+        >
+          <div className="bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 p-1 rounded-lg">
+            <div className="bg-gray-900 rounded-lg p-4 text-center">
+              <div className="text-2xl mb-2">🎉</div>
+              <h3 className="text-xl font-bold text-yellow-400 mb-2">You're entered into this week's MemeDrop!</h3>
+              <p className="text-gray-300 mb-3">Winner announced Sunday - 1 SOL prize!</p>
+              <Link href="/memedrop">
+                <Button className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-black font-bold">
+                  View MemeDrop Details
+                </Button>
+              </Link>
+            </div>
+          </div>
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

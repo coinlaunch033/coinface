@@ -1,4 +1,4 @@
-import { users, tokens, type User, type InsertUser, type Token, type InsertToken, type UpdateTokenTheme } from "@shared/schema";
+import { users, tokens, type User, type InsertUser, type Token, type InsertToken, type UpdateTokenTheme, type InsertMemeDropEntry, type MemeDropEntry } from "@shared/schema";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -10,21 +10,29 @@ export interface IStorage {
   getAllTokens(): Promise<Token[]>;
   updateTokenTheme(tokenName: string, theme: UpdateTokenTheme): Promise<Token | undefined>;
   incrementViewCount(tokenName: string): Promise<Token | undefined>;
+  
+  createMemeDropEntry(entry: InsertMemeDropEntry): Promise<MemeDropEntry>;
+  getMemeDropEntryCount(): Promise<number>;
+  getAllMemeDropEntries(): Promise<MemeDropEntry[]>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private tokens: Map<number, Token>;
   private tokensByName: Map<string, Token>;
+  private memeDropEntries: Map<number, MemeDropEntry>;
   private currentUserId: number;
   private currentTokenId: number;
+  private currentMemeDropId: number;
 
   constructor() {
     this.users = new Map();
     this.tokens = new Map();
     this.tokensByName = new Map();
+    this.memeDropEntries = new Map();
     this.currentUserId = 1;
     this.currentTokenId = 1;
+    this.currentMemeDropId = 1;
   }
 
   async getUser(id: number): Promise<User | undefined> {
@@ -87,6 +95,30 @@ export class MemStorage implements IStorage {
     this.tokens.set(token.id, updatedToken);
     this.tokensByName.set(tokenName.toLowerCase(), updatedToken);
     return updatedToken;
+  }
+
+  async createMemeDropEntry(insertEntry: InsertMemeDropEntry): Promise<MemeDropEntry> {
+    const id = this.currentMemeDropId++;
+    const entry: MemeDropEntry = {
+      id,
+      walletAddress: insertEntry.walletAddress,
+      tokenName: insertEntry.tokenName,
+      chain: insertEntry.chain,
+      twitter: insertEntry.twitter || null,
+      email: insertEntry.email || null,
+      createdAt: new Date(),
+    };
+    
+    this.memeDropEntries.set(id, entry);
+    return entry;
+  }
+
+  async getMemeDropEntryCount(): Promise<number> {
+    return this.memeDropEntries.size;
+  }
+
+  async getAllMemeDropEntries(): Promise<MemeDropEntry[]> {
+    return Array.from(this.memeDropEntries.values());
   }
 }
 

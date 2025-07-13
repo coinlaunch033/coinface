@@ -42,8 +42,29 @@ export const updateTokenThemeSchema = createInsertSchema(tokens).pick({
   fontStyle: true,
 });
 
+// MemeDrop entries table
+export const memeDropEntries = pgTable("meme_drop_entries", {
+  id: serial("id").primaryKey(),
+  walletAddress: text("wallet_address").notNull(),
+  tokenName: text("token_name").notNull(),
+  chain: text("chain").notNull(),
+  twitter: text("twitter"),
+  email: text("email"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertMemeDropEntrySchema = createInsertSchema(memeDropEntries).pick({
+  walletAddress: true,
+  tokenName: true,
+  chain: true,
+  twitter: true,
+  email: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertToken = z.infer<typeof insertTokenSchema>;
 export type Token = typeof tokens.$inferSelect;
 export type UpdateTokenTheme = z.infer<typeof updateTokenThemeSchema>;
+export type InsertMemeDropEntry = z.infer<typeof insertMemeDropEntrySchema>;
+export type MemeDropEntry = typeof memeDropEntries.$inferSelect;

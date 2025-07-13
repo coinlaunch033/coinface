@@ -1,7 +1,21 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
-const emojis = ["🚀", "💎", "🌙", "⚡", "🔥", "💰", "🎯", "🦄", "🌟", "⭐"];
+// Mix of real meme coin symbols and crypto emojis
+const cryptoSymbols = [
+  "🐕", // Dogecoin
+  "🐸", // Pepe
+  "🦊", // Shiba Inu
+  "🚀", // Rocket
+  "💎", // Diamond hands
+  "🌙", // To the moon
+  "⚡", // Lightning
+  "🔥", // Fire
+  "💰", // Money
+  "🎯", // Target
+  "🦄", // Unicorn
+  "⭐", // Star
+];
 
 interface FloatingEmoji {
   id: string;
@@ -22,7 +36,7 @@ export default function FloatingEmojis() {
       for (let i = 0; i < 8; i++) {
         newEmojis.push({
           id: `emoji-${i}`,
-          emoji: emojis[Math.floor(Math.random() * emojis.length)],
+          emoji: cryptoSymbols[Math.floor(Math.random() * cryptoSymbols.length)],
           x: Math.random() * 90 + 5, // 5% to 95% of screen width
           y: Math.random() * 90 + 5, // 5% to 95% of screen height
           delay: Math.random() * 3,

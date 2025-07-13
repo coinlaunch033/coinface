@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Home from "@/pages/home";
 import TokenPage from "@/pages/token-page";
+import MemeDrop from "@/pages/memedrop";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -12,6 +13,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/coin/:tokenName" component={TokenPage} />
+      <Route path="/memedrop" component={MemeDrop} />
       <Route component={NotFound} />
     </Switch>
   );
