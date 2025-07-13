@@ -8,6 +8,16 @@ MemeSite is a web3 meme coin auto-promotion platform that allows users to create
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes (January 2025)
+
+### User Flow Update
+- Changed from "Launch Your Meme Coin" to "Promote Your Meme Coin" 
+- Moved payment processing to Step 1 with "Promote Coin" button
+- Step 1 now handles: Chain selection, token address input, and $15 payment
+- Step 2 remains for customization: Logo upload, token name, and website generation
+- Removed token validation requirement - no blockchain verification needed
+- Payment processing uses blockchain functionality to receive $15 USD equivalent in native tokens
+
 ## System Architecture
 
 ### Frontend Architecture

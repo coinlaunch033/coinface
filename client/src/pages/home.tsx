@@ -94,9 +94,34 @@ export default function Home() {
     },
   });
 
-  const handleStep1Submit = (data: Step1Data) => {
-    setStep1Data(data);
-    setCurrentStep(2);
+  const handleStep1Submit = async (data: Step1Data) => {
+    setIsLoading(true);
+    
+    try {
+      // Process payment first
+      await paymentMutation.mutateAsync({
+        chain: data.chain,
+        amount: paymentAmounts[data.chain as keyof typeof paymentAmounts],
+        tokenName: "payment-step1", // Temporary name for payment
+      });
+      
+      // Payment successful, proceed to step 2
+      setStep1Data(data);
+      setCurrentStep(2);
+      
+      toast({
+        title: "Payment successful!",
+        description: "Now customize your token promotion page",
+      });
+    } catch (error) {
+      toast({
+        title: "Payment failed",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleStep2Submit = async (data: Step2Data) => {
@@ -105,14 +130,7 @@ export default function Home() {
     setIsLoading(true);
 
     try {
-      // Simulate payment processing
-      await paymentMutation.mutateAsync({
-        chain: step1Data.chain,
-        amount: paymentAmounts[step1Data.chain as keyof typeof paymentAmounts],
-        tokenName: data.tokenName,
-      });
-
-      // Create token after successful payment
+      // Create token page (payment was already processed in step 1)
       const formData = new FormData();
       formData.append("tokenName", data.tokenName);
       formData.append("tokenAddress", step1Data.tokenAddress);
@@ -128,7 +146,7 @@ export default function Home() {
       await createTokenMutation.mutateAsync(formData);
     } catch (error) {
       toast({
-        title: "Payment failed",
+        title: "Token creation failed",
         description: "Please try again.",
         variant: "destructive",
       });
@@ -181,7 +199,7 @@ export default function Home() {
             {/* Hero Section */}
             <div className="text-center mb-12">
               <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
-                Launch Your Meme Coin
+                Promote Your Meme Coin
               </h1>
               <p className="text-xl md:text-2xl mb-8 text-gray-300 max-w-2xl mx-auto">
                 Get a <span className="text-green-400 font-bold">fully generated website</span> for your meme coin in 2 easy steps. 
@@ -210,7 +228,7 @@ export default function Home() {
                 <CardContent className="p-0">
                   <div className="flex items-center justify-center mb-6">
                     <div className="bg-purple-500 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold mr-4">1</div>
-                    <h2 className="text-2xl font-bold">Select Chain & Token Address</h2>
+                    <h2 className="text-2xl font-bold">Select Chain & Pay $15</h2>
                   </div>
                   
                   <Form {...step1Form}>
@@ -241,23 +259,48 @@ export default function Home() {
                             <FormControl>
                               <Input
                                 placeholder="Enter your token contract address..."
-                                className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                                className="bg-white bg-opacity-10 border-white border-opacity-20 text-white placeholder:text-gray-400"
                                 {...field}
                               />
                             </FormControl>
                             <div className="text-sm text-gray-400">
-                              ℹ️ Make sure your token is verified on the selected chain
+                              ℹ️ This will be displayed on your promotion page
                             </div>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
 
+                      {/* Payment Section */}
+                      <div className="bg-gradient-to-r from-purple-500 bg-opacity-20 to-pink-500 bg-opacity-20 rounded-lg p-6 mt-6">
+                        <h3 className="text-xl font-bold mb-4 flex items-center">
+                          💳 Payment - $15 USD
+                        </h3>
+                        <div className="text-sm text-gray-300 mb-4">
+                          Pay in native token of your selected chain. Rate automatically calculated.
+                        </div>
+                        <div className="bg-white bg-opacity-10 rounded-lg p-4 mb-4">
+                          <div className="flex justify-between items-center">
+                            <span>Selected Chain:</span>
+                            <span className="font-bold text-purple-400">
+                              {step1Form.watch("chain") ? chainNames[step1Form.watch("chain") as keyof typeof chainNames] : "Select a chain"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center mt-2">
+                            <span>Amount:</span>
+                            <span className="font-bold text-green-400">
+                              {step1Form.watch("chain") ? paymentAmounts[step1Form.watch("chain") as keyof typeof paymentAmounts] : "Select a chain"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
                       <Button
                         type="submit"
-                        className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 py-4 text-lg font-bold neon-glow"
+                        disabled={isLoading}
+                        className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 py-4 text-lg font-bold neon-glow"
                       >
-                        Proceed to Step 2 →
+                        {isLoading ? "Processing Payment..." : "Promote Coin 🚀"}
                       </Button>
                     </form>
                   </Form>
@@ -277,7 +320,7 @@ export default function Home() {
               <CardContent className="p-0">
                 <div className="flex items-center justify-center mb-6">
                   <div className="bg-purple-500 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold mr-4">2</div>
-                  <h2 className="text-2xl font-bold">Upload & Customize</h2>
+                  <h2 className="text-2xl font-bold">Customize Your Token Page</h2>
                 </div>
                 
                 <Form {...step2Form}>
@@ -331,36 +374,13 @@ export default function Home() {
                       )}
                     />
 
-                    {/* Payment Section */}
-                    <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-lg p-6">
-                      <h3 className="text-xl font-bold mb-4 flex items-center">
-                        💳 Payment - $15 USD
-                      </h3>
-                      <div className="text-sm text-gray-300 mb-4">
-                        Pay in native token of your selected chain. Rate automatically calculated.
-                      </div>
-                      <div className="bg-white/10 rounded-lg p-4 mb-4">
-                        <div className="flex justify-between items-center">
-                          <span>Selected Chain:</span>
-                          <span className="font-bold text-purple-400">
-                            {step1Data ? chainNames[step1Data.chain as keyof typeof chainNames] : ""}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center mt-2">
-                          <span>Amount:</span>
-                          <span className="font-bold text-green-400">
-                            {step1Data ? paymentAmounts[step1Data.chain as keyof typeof paymentAmounts] : ""}
-                          </span>
-                        </div>
-                      </div>
-                      <Button
-                        type="submit"
-                        disabled={isLoading}
-                        className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 py-3 font-bold neon-glow"
-                      >
-                        {isLoading ? "Processing..." : "Pay $15 & Generate Site 🚀"}
-                      </Button>
-                    </div>
+                    <Button
+                      type="submit"
+                      disabled={isLoading}
+                      className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 py-4 text-lg font-bold neon-glow"
+                    >
+                      {isLoading ? "Generating Website..." : "Generate Promotion Site 🚀"}
+                    </Button>
 
                     <Button
                       type="button"
@@ -380,11 +400,15 @@ export default function Home() {
 
       {/* Loading Overlay */}
       {isLoading && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm z-50 flex items-center justify-center">
           <div className="text-center">
             <div className="text-6xl mb-4 animate-bounce">🚀</div>
-            <div className="text-2xl font-bold mb-2">Generating Your Token Page...</div>
-            <div className="text-gray-300">Please wait while we create your awesome site!</div>
+            <div className="text-2xl font-bold mb-2">
+              {currentStep === 1 ? "Processing Payment..." : "Generating Your Token Page..."}
+            </div>
+            <div className="text-gray-300">
+              {currentStep === 1 ? "Please wait while we process your payment" : "Please wait while we create your awesome site!"}
+            </div>
           </div>
         </div>
       )}
