@@ -182,12 +182,12 @@ export default function Home() {
             MemeSite
           </motion.div>
           <div className="text-sm bg-purple-500/20 px-3 py-1 rounded-full">
-            v1.0 🚀
+            Beta 🚀
           </div>
         </div>
         
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" className="hover:bg-white/20">
+          <Button variant="ghost" className="hover:bg-white hover:bg-opacity-20">
             How it works
           </Button>
           <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 neon-glow">
@@ -227,6 +227,34 @@ export default function Home() {
                   <div className="text-3xl font-bold text-purple-400">5</div>
                   <div className="text-sm text-gray-300">Chains</div>
                 </div>
+              </div>
+            </div>
+
+            {/* How it Works Section */}
+            <div className="mb-12 glass-card p-8">
+              <h2 className="text-3xl font-bold text-center mb-8 text-white">How It Works</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="text-center">
+                  <div className="text-4xl mb-4">🚀</div>
+                  <h3 className="text-xl font-bold mb-3 text-purple-400">Step 1: Promote Your Coin</h3>
+                  <p className="text-gray-300">
+                    Select your blockchain, enter your token address, and pay just $15 USD equivalent to get started. No complex setup required.
+                  </p>
+                </div>
+                <div className="text-center">
+                  <div className="text-4xl mb-4">🎨</div>
+                  <h3 className="text-xl font-bold mb-3 text-pink-400">Step 2: Customize & Share</h3>
+                  <p className="text-gray-300">
+                    Upload your token logo, set your token name, and get an instant promotional website with social sharing and DEX links.
+                  </p>
+                </div>
+              </div>
+              <div className="text-center mt-8">
+                <div className="text-4xl mb-4">📈</div>
+                <h3 className="text-xl font-bold mb-3 text-green-400">Instant Results</h3>
+                <p className="text-gray-300">
+                  Share your custom promotion page across Twitter, Telegram, Reddit, and direct links to major DEX platforms like DexScreener, BirdEye, and more.
+                </p>
               </div>
             </div>
 

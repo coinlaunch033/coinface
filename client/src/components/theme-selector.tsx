@@ -1,5 +1,7 @@
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface Theme {
   id: string;
@@ -18,27 +20,38 @@ const themes: Theme[] = [
 interface ThemeSelectorProps {
   selectedTheme: string;
   onThemeSelect: (themeId: string) => void;
+  isCreator?: boolean;
 }
 
-export default function ThemeSelector({ selectedTheme, onThemeSelect }: ThemeSelectorProps) {
+export default function ThemeSelector({ selectedTheme, onThemeSelect, isCreator = false }: ThemeSelectorProps) {
   return (
     <div className="glass-card p-6">
       <h3 className="text-xl font-bold mb-4 text-center">🎨 Customize Your Page Theme</h3>
+      {isCreator && (
+        <p className="text-sm text-center text-gray-400 mb-6">
+          Set your preferred theme for visitors to see
+        </p>
+      )}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {themes.map((theme) => (
           <motion.div
             key={theme.id}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className={cn(
-              "theme-button text-center cursor-pointer",
-              selectedTheme === theme.id && "active"
-            )}
-            onClick={() => onThemeSelect(theme.id)}
+            className="text-center"
           >
-            <div className={cn("w-12 h-12 rounded-lg mx-auto mb-2", theme.preview)}></div>
-            <div className="font-semibold text-sm">{theme.name}</div>
-            <div className="text-xs text-gray-400">{theme.description}</div>
+            <div className="flex flex-col items-center space-y-2">
+              <div className={cn("w-12 h-12 rounded-lg", theme.preview)}></div>
+              <Label htmlFor={`theme-${theme.id}`} className="text-sm font-medium">
+                {theme.name}
+              </Label>
+              <Switch
+                id={`theme-${theme.id}`}
+                checked={selectedTheme === theme.id}
+                onCheckedChange={(checked) => checked && onThemeSelect(theme.id)}
+              />
+              <div className="text-xs text-gray-400">{theme.description}</div>
+            </div>
           </motion.div>
         ))}
       </div>

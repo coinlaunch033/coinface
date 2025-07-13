@@ -64,6 +64,34 @@ export default function TokenPage() {
     });
   };
 
+  const shareUrl = typeof window !== "undefined" ? window.location.href : "";
+
+  const shareOnTwitter = (token: Token) => {
+    const text = `Check out ${token.tokenName} on MemeSite! 🚀 #${token.tokenName} #memecoin #crypto`;
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`;
+    window.open(url, '_blank');
+  };
+
+  const shareOnTelegram = (token: Token) => {
+    const text = `Check out ${token.tokenName} on MemeSite! 🚀`;
+    const url = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+  };
+
+  const shareOnReddit = (token: Token) => {
+    const title = `${token.tokenName} - Promote Your Meme Coin`;
+    const url = `https://reddit.com/submit?title=${encodeURIComponent(title)}&url=${encodeURIComponent(shareUrl)}`;
+    window.open(url, '_blank');
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(shareUrl);
+    toast({
+      title: "Link copied!",
+      description: "The share link has been copied to your clipboard.",
+    });
+  };
+
   useEffect(() => {
     if (token && !hasIncrementedView) {
       incrementViewMutation.mutate();
@@ -142,15 +170,15 @@ export default function TokenPage() {
               MemeSite
             </div>
             <div className="text-sm bg-purple-500/20 px-3 py-1 rounded-full">
-              v1.0 🚀
+              Beta 🚀
             </div>
           </div>
         </Link>
         
         <Link href="/">
-          <Button variant="outline" className="bg-white/10 hover:bg-white/20 border-white/20">
+          <Button variant="outline" className="bg-white bg-opacity-10 hover:bg-white hover:bg-opacity-20 border-white border-opacity-20">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Create New Token
+            Promote New Token
           </Button>
         </Link>
       </nav>
@@ -176,14 +204,74 @@ export default function TokenPage() {
           </p>
         </motion.div>
 
-        {/* Token Card */}
-        <TokenCard token={token} className="mb-8" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Token Card and Share Section */}
+          <div className="space-y-8">
+            <TokenCard token={token} />
+            
+            {/* Share Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="glass-card p-6 text-center"
+            >
+              <h3 className="text-xl font-bold mb-4">📢 Share This Token</h3>
+              <div className="flex justify-center space-x-4 mb-6">
+                <Button
+                  onClick={() => shareOnTwitter(token)}
+                  className="bg-blue-500 hover:bg-blue-600"
+                >
+                  🐦 Twitter
+                </Button>
+                <Button
+                  onClick={() => shareOnTelegram(token)}
+                  className="bg-blue-400 hover:bg-blue-500"
+                >
+                  📱 Telegram
+                </Button>
+                <Button
+                  onClick={() => shareOnReddit(token)}
+                  className="bg-orange-500 hover:bg-orange-600"
+                >
+                  🔗 Reddit
+                </Button>
+              </div>
+              <div className="text-sm text-gray-400 mb-2">Share Link:</div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="text"
+                  value={shareUrl}
+                  readOnly
+                  className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm"
+                />
+                <Button
+                  onClick={copyToClipboard}
+                  variant="outline"
+                  size="sm"
+                  className="text-white border-gray-700 hover:bg-gray-700"
+                >
+                  📋 Copy
+                </Button>
+              </div>
+            </motion.div>
+          </div>
 
-        {/* Theme Selector */}
-        <ThemeSelector
-          selectedTheme={token.theme}
-          onThemeSelect={handleThemeSelect}
-        />
+          {/* Theme Selector */}
+          <div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <ThemeSelector
+                selectedTheme={token.theme}
+                onThemeSelect={handleThemeSelect}
+                isCreator={true}
+              />
+            </motion.div>
+          </div>
+        </div>
       </div>
     </div>
   );
