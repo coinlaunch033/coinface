@@ -19,7 +19,7 @@ export interface IStorage {
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private tokens: Map<number, Token>;
-  private tokensByName: Map<string, Token>;
+  private tokensByNameAndChain: Map<string, Token>; // Changed to support multiple tokens with same name
   private memeDropEntries: Map<number, MemeDropEntry>;
   private currentUserId: number;
   private currentTokenId: number;
@@ -28,7 +28,7 @@ export class MemStorage implements IStorage {
   constructor() {
     this.users = new Map();
     this.tokens = new Map();
-    this.tokensByName = new Map();
+    this.tokensByNameAndChain = new Map();
     this.memeDropEntries = new Map();
     this.currentUserId = 1;
     this.currentTokenId = 1;
@@ -65,12 +65,18 @@ export class MemStorage implements IStorage {
       logoUrl: insertToken.logoUrl || null
     };
     this.tokens.set(id, token);
-    this.tokensByName.set(token.tokenName.toLowerCase(), token);
+    // Use combination of token name and chain as key to allow duplicates
+    const key = `${token.tokenName.toLowerCase()}-${token.chain.toLowerCase()}`;
+    this.tokensByNameAndChain.set(key, token);
     return token;
   }
 
   async getTokenByName(tokenName: string): Promise<Token | undefined> {
-    return this.tokensByName.get(tokenName.toLowerCase());
+    // For backward compatibility, return the first token with this name
+    // In a real app, you might want to specify chain as well
+    return Array.from(this.tokensByNameAndChain.values()).find(
+      token => token.tokenName.toLowerCase() === tokenName.toLowerCase()
+    );
   }
 
   async getAllTokens(): Promise<Token[]> {
@@ -78,22 +84,26 @@ export class MemStorage implements IStorage {
   }
 
   async updateTokenTheme(tokenName: string, themeUpdate: UpdateTokenTheme): Promise<Token | undefined> {
-    const token = this.tokensByName.get(tokenName.toLowerCase());
+    const token = await this.getTokenByName(tokenName);
     if (!token) return undefined;
 
     const updatedToken = { ...token, ...themeUpdate };
     this.tokens.set(token.id, updatedToken);
-    this.tokensByName.set(tokenName.toLowerCase(), updatedToken);
+    // Update the key with the new token data
+    const key = `${token.tokenName.toLowerCase()}-${token.chain.toLowerCase()}`;
+    this.tokensByNameAndChain.set(key, updatedToken);
     return updatedToken;
   }
 
   async incrementViewCount(tokenName: string): Promise<Token | undefined> {
-    const token = this.tokensByName.get(tokenName.toLowerCase());
+    const token = await this.getTokenByName(tokenName);
     if (!token) return undefined;
 
     const updatedToken = { ...token, viewCount: token.viewCount + 1 };
     this.tokens.set(token.id, updatedToken);
-    this.tokensByName.set(tokenName.toLowerCase(), updatedToken);
+    // Update the key with the new token data
+    const key = `${token.tokenName.toLowerCase()}-${token.chain.toLowerCase()}`;
+    this.tokensByNameAndChain.set(key, updatedToken);
     return updatedToken;
   }
 

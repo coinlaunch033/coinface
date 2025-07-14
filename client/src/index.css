@@ -78,11 +78,6 @@
     animation: gradientShift 6s ease infinite;
   }
   
-  .meme-matrix {
-    background: hsl(0, 0%, 0%);
-    color: hsl(134, 100%, 56%);
-  }
-  
   .neon-glow {
     box-shadow: 0 0 20px hsla(262, 83%, 58%, 0.6);
     transition: all 0.3s ease;

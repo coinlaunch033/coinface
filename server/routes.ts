@@ -41,13 +41,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Check if token name already exists
-      const existingToken = await storage.getTokenByName(tokenName);
-      if (existingToken) {
-        return res.status(409).json({ 
-          message: "Token name already exists" 
-        });
-      }
+      // Allow duplicate token names - common in meme coin world
+      // Multiple tokens can have the same name on different chains
 
       // Handle logo upload
       let logoUrl = null;

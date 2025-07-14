@@ -7,9 +7,8 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import FloatingEmojis from "@/components/floating-emojis";
 import TokenCard from "@/components/token-card";
-import ThemeSelector from "@/components/theme-selector";
 import { apiRequest } from "@/lib/queryClient";
-import type { Token, UpdateTokenTheme } from "@shared/schema";
+import type { Token } from "@shared/schema";
 
 export default function TokenPage() {
   const { tokenName } = useParams<{ tokenName: string }>();
@@ -31,37 +30,6 @@ export default function TokenPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/tokens", tokenName] });
     },
   });
-
-  const updateThemeMutation = useMutation({
-    mutationFn: async (themeData: UpdateTokenTheme) => {
-      const response = await apiRequest("PATCH", `/api/tokens/${tokenName}/theme`, themeData);
-      return response.json();
-    },
-    onSuccess: (updatedToken) => {
-      queryClient.setQueryData(["/api/tokens", tokenName], updatedToken);
-      toast({
-        title: "Theme updated!",
-        description: "Your token page theme has been updated successfully.",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Update failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleThemeSelect = (themeId: string) => {
-    if (!token) return;
-
-    updateThemeMutation.mutate({
-      theme: themeId,
-      buttonStyle: token.buttonStyle,
-      fontStyle: token.fontStyle,
-    });
-  };
 
   const shareUrl = typeof window !== "undefined" ? window.location.href : "";
 
@@ -184,113 +152,75 @@ export default function TokenPage() {
 
       {/* Main Content */}
       <div className="relative z-10 container mx-auto px-6 py-8">
-        {/* Success Message */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
-        >
-          <div className="inline-flex items-center space-x-2 bg-green-500/20 text-green-400 px-4 py-2 rounded-full mb-4">
-            <span>✅</span>
-            <span className="font-semibold">Token Page is Live!</span>
-          </div>
-          <h2 className="text-3xl font-bold mb-4">Share Your Token with the World</h2>
-          <p className="text-gray-300 mb-6">
-            Share this link with your community: 
-            <span className="text-purple-400 font-mono ml-2">
-              {window.location.href}
-            </span>
-          </p>
-        </motion.div>
+        <div className="max-w-4xl mx-auto">
+          {/* Meme-style Heading */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-8"
+          >
+            <h2 className="text-3xl font-bold mb-4 flex items-center justify-center gap-2">
+              <span className="text-4xl">💎</span>
+              Share Your Token with the World
+            </h2>
+          </motion.div>
 
-        {/* MemeDrop Banner */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.5, duration: 0.5 }}
-          className="mb-8"
-        >
-          <div className="bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 p-1 rounded-lg">
-            <div className="bg-gray-900 rounded-lg p-4 text-center">
-              <div className="text-2xl mb-2">🎉</div>
-              <h3 className="text-xl font-bold text-yellow-400 mb-2">You're entered into this week's MemeDrop!</h3>
-              <p className="text-gray-300 mb-3">Winner announced Sunday - 1 SOL prize!</p>
-              <Link href="/memedrop">
-                <Button className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-black font-bold">
-                  View MemeDrop Details
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </motion.div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Token Card and Share Section */}
-          <div className="space-y-8">
+          {/* Token Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mb-8"
+          >
             <TokenCard token={token} />
-            
-            {/* Share Section */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="glass-card p-6 text-center"
-            >
-              <h3 className="text-xl font-bold mb-4">📢 Share This Token</h3>
-              <div className="flex justify-center space-x-4 mb-6">
-                <Button
-                  onClick={() => shareOnTwitter(token)}
-                  className="bg-blue-500 hover:bg-blue-600"
-                >
-                  🐦 Twitter
-                </Button>
-                <Button
-                  onClick={() => shareOnTelegram(token)}
-                  className="bg-blue-400 hover:bg-blue-500"
-                >
-                  📱 Telegram
-                </Button>
-                <Button
-                  onClick={() => shareOnReddit(token)}
-                  className="bg-orange-500 hover:bg-orange-600"
-                >
-                  🔗 Reddit
-                </Button>
-              </div>
-              <div className="text-sm text-gray-400 mb-2">Share Link:</div>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="text"
-                  value={shareUrl}
-                  readOnly
-                  className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm"
-                />
-                <Button
-                  onClick={copyToClipboard}
-                  variant="outline"
-                  size="sm"
-                  className="text-white border-gray-700 hover:bg-gray-700"
-                >
-                  📋 Copy
-                </Button>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Theme Selector */}
-          <div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              <ThemeSelector
-                selectedTheme={token.theme}
-                onThemeSelect={handleThemeSelect}
-                isCreator={true}
+          </motion.div>
+          
+          {/* Share Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="glass-card p-6 text-center"
+          >
+            <h3 className="text-xl font-bold mb-4">📢 Share This Token</h3>
+            <div className="flex justify-center space-x-4 mb-6">
+              <Button
+                onClick={() => shareOnTwitter(token)}
+                className="bg-blue-500 hover:bg-blue-600"
+              >
+                🐦 Twitter
+              </Button>
+              <Button
+                onClick={() => shareOnTelegram(token)}
+                className="bg-blue-400 hover:bg-blue-500"
+              >
+                📱 Telegram
+              </Button>
+              <Button
+                onClick={() => shareOnReddit(token)}
+                className="bg-orange-500 hover:bg-orange-600"
+              >
+                🔗 Reddit
+              </Button>
+            </div>
+            <div className="text-sm text-gray-400 mb-2">Share Link:</div>
+            <div className="flex items-center space-x-2">
+              <input
+                type="text"
+                value={shareUrl}
+                readOnly
+                className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm"
               />
-            </motion.div>
-          </div>
+              <Button
+                onClick={copyToClipboard}
+                variant="outline"
+                size="sm"
+                className="text-white border-gray-700 hover:bg-gray-700"
+              >
+                📋 Copy
+              </Button>
+            </div>
+          </motion.div>
         </div>
       </div>
     </div>

@@ -13,7 +13,9 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import FloatingEmojis from "@/components/floating-emojis";
 import ChainSelector from "@/components/chain-selector";
+import ThemeSelector from "@/components/theme-selector";
 import { useLocation, Link } from "wouter";
+import { dexLogos } from "@/assets/logos";
 
 const step1Schema = z.object({
   chain: z.string().min(1, "Please select a chain"),
@@ -23,6 +25,11 @@ const step1Schema = z.object({
 const step2Schema = z.object({
   tokenName: z.string().min(1, "Please enter a token name"),
   logo: z.any().optional(),
+  theme: z.string().default("dark"),
+  buttonStyle: z.string().default("rounded"),
+  fontStyle: z.string().default("sans"),
+  email: z.string().email().optional().or(z.literal("")),
+  twitter: z.string().optional(),
 });
 
 type Step1Data = z.infer<typeof step1Schema>;
@@ -48,6 +55,7 @@ export default function Home() {
   const [currentStep, setCurrentStep] = useState(1);
   const [step1Data, setStep1Data] = useState<Step1Data | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
@@ -63,6 +71,11 @@ export default function Home() {
     resolver: zodResolver(step2Schema),
     defaultValues: {
       tokenName: "",
+      theme: "dark",
+      buttonStyle: "rounded",
+      fontStyle: "sans",
+      email: "",
+      twitter: "",
     },
   });
 
@@ -73,7 +86,7 @@ export default function Home() {
     },
     onSuccess: (token) => {
       toast({
-        title: "Token created successfully!",
+        title: "Token page is live! 🎉",
         description: `Your token page is now live at /coin/${token.tokenName.toLowerCase()}`,
       });
       setLocation(`/coin/${token.tokenName.toLowerCase()}`);
@@ -127,7 +140,7 @@ export default function Home() {
   const handleStep2Submit = async (data: Step2Data) => {
     if (!step1Data) return;
 
-    setIsLoading(true);
+    setIsGenerating(true);
 
     try {
       // Create token page (payment was already processed in step 1)
@@ -135,9 +148,9 @@ export default function Home() {
       formData.append("tokenName", data.tokenName);
       formData.append("tokenAddress", step1Data.tokenAddress);
       formData.append("chain", step1Data.chain);
-      formData.append("theme", "dark");
-      formData.append("buttonStyle", "rounded");
-      formData.append("fontStyle", "sans");
+      formData.append("theme", data.theme);
+      formData.append("buttonStyle", data.buttonStyle);
+      formData.append("fontStyle", data.fontStyle);
 
       if (data.logo && data.logo[0]) {
         formData.append("logo", data.logo[0]);
@@ -147,6 +160,9 @@ export default function Home() {
         tokenName: data.tokenName,
         tokenAddress: step1Data.tokenAddress,
         chain: step1Data.chain,
+        theme: data.theme,
+        buttonStyle: data.buttonStyle,
+        fontStyle: data.fontStyle,
         hasLogo: !!(data.logo && data.logo[0])
       });
 
@@ -159,12 +175,16 @@ export default function Home() {
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsGenerating(false);
     }
   };
 
   const handleChainSelect = (chainId: string) => {
     step1Form.setValue("chain", chainId);
+  };
+
+  const handleThemeSelect = (themeId: string) => {
+    step2Form.setValue("theme", themeId);
   };
 
   return (
@@ -192,9 +212,6 @@ export default function Home() {
               🎁 MemeDrop
             </Button>
           </Link>
-          <Button variant="ghost" className="hover:bg-white hover:bg-opacity-20">
-            How it works
-          </Button>
           <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 neon-glow">
             Connect Wallet
           </Button>
@@ -235,36 +252,8 @@ export default function Home() {
               </div>
             </div>
 
-            {/* How it Works Section */}
-            <div className="mb-12 glass-card p-8">
-              <h2 className="text-3xl font-bold text-center mb-8 text-white">How It Works</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="text-center">
-                  <div className="text-4xl mb-4">🚀</div>
-                  <h3 className="text-xl font-bold mb-3 text-purple-400">Step 1: Promote Your Coin</h3>
-                  <p className="text-gray-300">
-                    Select your blockchain, enter your token address, and pay just $15 USD equivalent to get started. No complex setup required.
-                  </p>
-                </div>
-                <div className="text-center">
-                  <div className="text-4xl mb-4">🎨</div>
-                  <h3 className="text-xl font-bold mb-3 text-pink-400">Step 2: Customize & Share</h3>
-                  <p className="text-gray-300">
-                    Upload your token logo, set your token name, and get an instant promotional website with social sharing and DEX links.
-                  </p>
-                </div>
-              </div>
-              <div className="text-center mt-8">
-                <div className="text-4xl mb-4">📈</div>
-                <h3 className="text-xl font-bold mb-3 text-green-400">Instant Results</h3>
-                <p className="text-gray-300">
-                  Share your custom promotion page across Twitter, Telegram, Reddit, and direct links to major DEX platforms like DexScreener, BirdEye, and more.
-                </p>
-              </div>
-            </div>
-
             {/* Step 1 Form */}
-            <div className="max-w-2xl mx-auto">
+            <div className="max-w-2xl mx-auto mb-12">
               <Card className="glass-card p-8">
                 <CardContent className="p-0">
                   <div className="flex items-center justify-center mb-6">
@@ -348,6 +337,52 @@ export default function Home() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* How it Works Section */}
+            <div className="mb-12 glass-card p-8">
+              <h2 className="text-3xl font-bold text-center mb-8 text-white">How It Works</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <div className="text-center">
+                  <div className="text-4xl mb-4">🚀</div>
+                  <h3 className="text-xl font-bold mb-3 text-purple-400">Step 1: Promote Your Coin</h3>
+                  <p className="text-gray-300">
+                    Select your blockchain, enter your token address, and pay just $15 USD equivalent to get started. No complex setup required.
+                  </p>
+                </div>
+                <div className="text-center">
+                  <div className="text-4xl mb-4">🎨</div>
+                  <h3 className="text-xl font-bold mb-3 text-pink-400">Step 2: Customize & Share</h3>
+                  <p className="text-gray-300">
+                    Upload your token logo, set your token name, and get an instant promotional website with social sharing and DEX links.
+                  </p>
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-4xl mb-4">📈</div>
+                <h3 className="text-xl font-bold mb-3 text-green-400">Instant Results</h3>
+                <p className="text-gray-300 mb-6">
+                  Your coin will be promoted on <span className="text-yellow-400 font-bold">DexScreener</span>, <span className="text-blue-400 font-bold">GMGN</span>, <span className="text-purple-400 font-bold">Axiom</span>, and more! Plus get a <span className="text-green-400 font-bold">free website generated</span> for you with all the tools you need to succeed.
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                  <div className="bg-white/10 backdrop-blur-sm px-4 py-3 rounded-lg flex flex-col items-center">
+                    <img src={dexLogos.dexscreener} alt="DexScreener" className="w-8 h-8 mb-2" />
+                    <div className="text-sm font-bold">DexScreener</div>
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-sm px-4 py-3 rounded-lg flex flex-col items-center">
+                    <img src={dexLogos.gmgn} alt="GMGN" className="w-8 h-8 mb-2" />
+                    <div className="text-sm font-bold">GMGN</div>
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-sm px-4 py-3 rounded-lg flex flex-col items-center">
+                    <img src={dexLogos.geckoterminal} alt="GeckoTerminal" className="w-8 h-8 mb-2" />
+                    <div className="text-sm font-bold">GeckoTerminal</div>
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-sm px-4 py-3 rounded-lg flex flex-col items-center">
+                    <div className="text-2xl mb-2">🌐</div>
+                    <div className="text-sm font-bold">Free Website</div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </motion.div>
         )}
 
@@ -355,100 +390,129 @@ export default function Home() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="max-w-2xl mx-auto"
+            className="max-w-4xl mx-auto"
           >
-            <Card className="glass-card p-8">
-              <CardContent className="p-0">
-                <div className="flex items-center justify-center mb-6">
-                  <div className="bg-purple-500 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold mr-4">2</div>
-                  <h2 className="text-2xl font-bold">Customize Your Token Page</h2>
+            {/* MemeDrop Notification - Top, full width */}
+            <div className="mb-8">
+              <div className="bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 p-1 rounded-lg w-full">
+                <div className="bg-gray-900 rounded-lg p-4 text-left">
+                  <div className="text-2xl mb-2">🎉</div>
+                  <h3 className="text-xl font-bold text-yellow-400 mb-2">You're entered into this week's MemeDrop!</h3>
+                  <p className="text-gray-300 mb-3">Winner announced Sunday - 1 SOL prize!</p>
+                  <Link href="/memedrop">
+                    <Button className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-black font-bold">
+                      View MemeDrop Details
+                    </Button>
+                  </Link>
                 </div>
-                
-                <Form {...step2Form}>
-                  <form onSubmit={step2Form.handleSubmit(handleStep2Submit)} className="space-y-6">
-                    <FormField
-                      control={step2Form.control}
-                      name="logo"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-lg font-semibold">Upload Meme Logo</FormLabel>
-                          <FormControl>
-                            <div className="border-2 border-dashed border-white border-opacity-30 rounded-lg p-8 text-center hover:border-purple-500 transition-all">
-                              <div className="text-4xl mb-2">📷</div>
-                              <div className="text-lg font-semibold mb-2">Drop your logo here</div>
-                              <div className="text-sm text-gray-400 mb-4">PNG, JPEG up to 5MB</div>
-                              <Input
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                onChange={(e) => field.onChange(e.target.files)}
-                              />
-                              <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => document.querySelector('input[type="file"]')?.click()}
-                              >
-                                Choose File
-                              </Button>
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Step 2 Form */}
+              <div>
+                <Card className="glass-card p-8">
+                  <CardContent className="p-0">
+                    <div className="flex items-center justify-center mb-6">
+                      <div className="bg-purple-500 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold mr-4">2</div>
+                      <h2 className="text-2xl font-bold">Customize Your Token Page</h2>
+                    </div>
+                    
+                    <Form {...step2Form}>
+                      <form onSubmit={step2Form.handleSubmit(handleStep2Submit)} className="space-y-6">
+                        <FormField
+                          control={step2Form.control}
+                          name="logo"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-lg font-semibold">Upload Meme Logo</FormLabel>
+                              <FormControl>
+                                <div className="border-2 border-dashed border-white border-opacity-30 rounded-lg p-8 text-center hover:border-purple-500 transition-all">
+                                  <div className="text-4xl mb-2">📷</div>
+                                  <div className="text-lg font-semibold mb-2">Drop your logo here</div>
+                                  <div className="text-sm text-gray-400 mb-4">PNG, JPEG up to 5MB</div>
+                                  <Input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(e) => field.onChange(e.target.files)}
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => (document.querySelector('input[type="file"]') as HTMLInputElement)?.click()}
+                                  >
+                                    Choose File
+                                  </Button>
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                    <FormField
-                      control={step2Form.control}
-                      name="tokenName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-lg font-semibold">Custom Token Name</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="e.g., PepeBlaster, ShibaMoon..."
-                              className="bg-white bg-opacity-10 border-white border-opacity-20 text-white placeholder:text-gray-400"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        <FormField
+                          control={step2Form.control}
+                          name="tokenName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-lg font-semibold">Custom Token Name</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="e.g., PepeBlaster, ShibaMoon..."
+                                  className="bg-white bg-opacity-10 border-white border-opacity-20 text-white placeholder:text-gray-400"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                    <Button
-                      type="submit"
-                      disabled={isLoading}
-                      className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 py-4 text-lg font-bold neon-glow"
-                    >
-                      {isLoading ? "Generating Website..." : "Generate Promotion Site 🚀"}
-                    </Button>
+                        <Button
+                          type="submit"
+                          disabled={isGenerating}
+                          className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 py-4 text-lg font-bold neon-glow"
+                        >
+                          {isGenerating ? "Generating Website..." : "Generate Promotion Site 🚀"}
+                        </Button>
 
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setCurrentStep(1)}
-                      className="w-full bg-white bg-opacity-10 hover:bg-white hover:bg-opacity-20 border-white border-opacity-20"
-                    >
-                      ← Back to Step 1
-                    </Button>
-                  </form>
-                </Form>
-              </CardContent>
-            </Card>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setCurrentStep(1)}
+                          className="w-full bg-white bg-opacity-10 hover:bg-white hover:bg-opacity-20 border-white border-opacity-20"
+                        >
+                          ← Back to Step 1
+                        </Button>
+                      </form>
+                    </Form>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Theme Selector */}
+              <div>
+                <ThemeSelector
+                  selectedTheme={step2Form.watch("theme")}
+                  onThemeSelect={handleThemeSelect}
+                  isCreator={true}
+                />
+              </div>
+            </div>
           </motion.div>
         )}
       </div>
 
-      {/* Loading Overlay */}
-      {isLoading && (
+      {/* Loading Overlay - Only for step 2 generation */}
+      {isGenerating && (
         <div className="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm z-50 flex items-center justify-center">
           <div className="text-center">
             <div className="text-6xl mb-4 animate-bounce">🚀</div>
             <div className="text-2xl font-bold mb-2">
-              {currentStep === 1 ? "Processing Payment..." : "Generating Your Token Page..."}
+              Generating Your Token Page...
             </div>
             <div className="text-gray-300">
-              {currentStep === 1 ? "Please wait while we process your payment" : "Please wait while we create your awesome site!"}
+              Please wait while we create your awesome site!
             </div>
           </div>
         </div>

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import type { Token } from "@shared/schema";
+import { dexLogos, socialLogos } from "@/assets/logos";
 
 interface TokenCardProps {
   token: Token;
@@ -21,16 +22,16 @@ const chainColors = {
 };
 
 const dexLinks = [
-  { name: "DexScreener", color: "bg-blue-500 hover:bg-blue-600", url: "https://dexscreener.com" },
-  { name: "BirdEye", color: "bg-green-500 hover:bg-green-600", url: "https://birdeye.so" },
-  { name: "GeckoTerminal", color: "bg-purple-500 hover:bg-purple-600", url: "https://geckoterminal.com" },
-  { name: "GMGN", color: "bg-orange-500 hover:bg-orange-600", url: "https://gmgn.ai" },
+  { name: "DexScreener", logo: dexLogos.dexscreener, color: "bg-blue-500 hover:bg-blue-600", url: "https://dexscreener.com" },
+  { name: "BirdEye", logo: dexLogos.birdeye, color: "bg-green-500 hover:bg-green-600", url: "https://birdeye.so" },
+  { name: "GeckoTerminal", logo: dexLogos.geckoterminal, color: "bg-purple-500 hover:bg-purple-600", url: "https://geckoterminal.com" },
+  { name: "GMGN", logo: dexLogos.gmgn, color: "bg-orange-500 hover:bg-orange-600", url: "https://gmgn.ai" },
 ];
 
 const socialLinks = [
-  { name: "Twitter", icon: "🐦", color: "bg-blue-400 hover:bg-blue-500", url: "https://twitter.com/intent/tweet" },
-  { name: "Reddit", icon: "📱", color: "bg-orange-500 hover:bg-orange-600", url: "https://reddit.com/submit" },
-  { name: "Telegram", icon: "✈️", color: "bg-blue-500 hover:bg-blue-600", url: "https://t.me/share/url" },
+  { name: "Twitter", logo: socialLogos.twitter, color: "bg-blue-400 hover:bg-blue-500", url: "https://twitter.com/intent/tweet" },
+  { name: "Reddit", logo: socialLogos.reddit, color: "bg-orange-500 hover:bg-orange-600", url: "https://reddit.com/submit" },
+  { name: "Telegram", logo: socialLogos.telegram, color: "bg-blue-500 hover:bg-blue-600", url: "https://t.me/share/url" },
 ];
 
 export default function TokenCard({ token, className }: TokenCardProps) {
@@ -98,8 +99,6 @@ export default function TokenCard({ token, className }: TokenCardProps) {
         return "bg-white text-gray-900 border-gray-200";
       case "rainbow":
         return "meme-rainbow text-white";
-      case "matrix":
-        return "meme-matrix border-green-500";
       default:
         return "token-card";
     }
@@ -195,7 +194,7 @@ export default function TokenCard({ token, className }: TokenCardProps) {
                 className={cn("pixel-hover", link.color, getButtonClasses())}
                 onClick={() => window.open(link.url, '_blank')}
               >
-                <ExternalLink className="w-4 h-4 mr-2" />
+                <img src={link.logo} alt={`${link.name} logo`} className="w-4 h-4 mr-2" />
                 {link.name}
               </Button>
             ))}
@@ -214,7 +213,7 @@ export default function TokenCard({ token, className }: TokenCardProps) {
                   className={cn("social-button pixel-hover", social.color, getButtonClasses())}
                   onClick={() => handleSocialShare(social.name)}
                 >
-                  <span className="text-lg">{social.icon}</span>
+                  <img src={social.logo} alt={`${social.name} logo`} className="w-4 h-4 mr-2" />
                   <span>{social.name}</span>
                 </Button>
               ))}

@@ -14,7 +14,6 @@ const themes: Theme[] = [
   { id: "dark", name: "Dark", preview: "bg-gray-800", description: "Classic dark theme" },
   { id: "light", name: "Light", preview: "bg-gray-100", description: "Clean light theme" },
   { id: "rainbow", name: "Rainbow", preview: "bg-gradient-to-r from-pink-500 to-purple-500", description: "Colorful meme theme" },
-  { id: "matrix", name: "Matrix", preview: "bg-black border border-green-500", description: "Hacker aesthetic" },
 ];
 
 interface ThemeSelectorProps {
