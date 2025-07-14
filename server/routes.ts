@@ -1,7 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import express from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./supabase-storage";
+import { storage } from "./neon-storage";
 import { insertTokenSchema, updateTokenThemeSchema, insertMemeDropEntrySchema } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
