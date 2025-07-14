@@ -32,8 +32,8 @@ A multi-chain meme coin promotion platform that helps creators instantly generat
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/coinlaunch033/memesite.git
-   cd memesite
+   git clone https://github.com/coinlaunch033/coinface.git
+   cd coinface
    ```
 
 2. **Install dependencies**
@@ -119,8 +119,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🆘 Support
 
-- **Issues**: [GitHub Issues](https://github.com/coinlaunch033/memesite/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/coinlaunch033/memesite/discussions)
+- **Issues**: [GitHub Issues](https://github.com/coinlaunch033/coinface/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/coinlaunch033/coinface/discussions)
 
 ## 🚀 Roadmap
 
