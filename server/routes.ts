@@ -8,6 +8,19 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 
+// NEON DB TOKEN CREATION CHECKLIST:
+// 1. Ensure DATABASE_URL is set and valid
+// 2. Validate all required fields before DB insert
+// 3. Handle logo uploads robustly (file type, size, path)
+// 4. Return clear errors for missing/invalid data
+// 5. Index token_name and chain in Neon for fast lookups
+// 6. Use parameterized queries (Neon does this)
+// 7. Add logging for failed DB operations
+// 8. (Optional) Add rate limiting/anti-spam for token creation
+//
+// ---
+//
+// Enhanced /api/tokens endpoint below:
 // Configure multer for file uploads
 const upload = multer({
   dest: 'uploads/',
@@ -24,29 +37,58 @@ const upload = multer({
   },
 });
 
+// Helper to convert snake_case to camelCase for token
+function toCamelCaseToken(token: any) {
+  if (!token) return token;
+  return {
+    id: token.id,
+    tokenName: token.token_name,
+    tokenAddress: token.token_address,
+    chain: token.chain,
+    logoUrl: token.logo_url,
+    theme: token.theme,
+    buttonStyle: token.button_style,
+    fontStyle: token.font_style,
+    viewCount: token.view_count,
+    createdAt: token.created_at,
+  };
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Create token endpoint
   app.post("/api/tokens", upload.single('logo'), async (req, res) => {
     try {
-      console.log("Request body:", req.body);
-      console.log("Request file:", req.file);
+      console.log("[TOKEN CREATE] Request body:", req.body);
+      console.log("[TOKEN CREATE] Request file:", req.file);
       
       const { tokenName, tokenAddress, chain, theme = "dark", buttonStyle = "rounded", fontStyle = "sans" } = req.body;
       
-      // Validate required fields
-      if (!tokenName || !tokenAddress || !chain) {
-        console.log("Missing fields - tokenName:", tokenName, "tokenAddress:", tokenAddress, "chain:", chain);
-        return res.status(400).json({ 
-          message: "Missing required fields: tokenName, tokenAddress, chain" 
-        });
+      // Extra validation
+      if (!tokenName || typeof tokenName !== 'string' || tokenName.length < 2) {
+        console.error("[TOKEN CREATE] Invalid or missing tokenName:", tokenName);
+        return res.status(400).json({ message: "Missing or invalid tokenName (min 2 chars)" });
       }
-
-      // Allow duplicate token names - common in meme coin world
-      // Multiple tokens can have the same name on different chains
+      if (!tokenAddress || typeof tokenAddress !== 'string' || tokenAddress.length < 8) {
+        console.error("[TOKEN CREATE] Invalid or missing tokenAddress:", tokenAddress);
+        return res.status(400).json({ message: "Missing or invalid tokenAddress (min 8 chars)" });
+      }
+      if (!chain || typeof chain !== 'string') {
+        console.error("[TOKEN CREATE] Invalid or missing chain:", chain);
+        return res.status(400).json({ message: "Missing or invalid chain" });
+      }
 
       // Handle logo upload
       let logoUrl = null;
       if (req.file) {
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        if (!allowedTypes.includes(req.file.mimetype)) {
+          console.error("[TOKEN CREATE] Invalid logo file type:", req.file.mimetype);
+          return res.status(400).json({ message: "Invalid logo file type. Only JPEG, PNG, and GIF are allowed." });
+        }
+        if (req.file.size > 5 * 1024 * 1024) {
+          console.error("[TOKEN CREATE] Logo file too large:", req.file.size);
+          return res.status(400).json({ message: "Logo file too large (max 5MB)." });
+        }
         const logoFileName = `${Date.now()}-${req.file.originalname}`;
         const logoPath = path.join('uploads', logoFileName);
         fs.renameSync(req.file.path, logoPath);
@@ -67,21 +109,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const token = await storage.createToken(validatedToken);
       
       // Automatically enter into MemeDrop when token is created
-      await storage.createMemeDropEntry({
-        walletAddress: `${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}`, // Mock wallet address
-        tokenName,
-        chain,
-        twitter: undefined,
-        email: undefined,
-      });
+      try {
+        await storage.createMemeDropEntry({
+          walletAddress: `${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}`,
+          tokenName,
+          chain,
+          twitter: undefined,
+          email: undefined,
+        });
+      } catch (memeDropError) {
+        console.error("[TOKEN CREATE] Error creating MemeDrop entry:", memeDropError);
+        // Continue even if MemeDrop entry fails
+      }
       
       res.status(201).json(token);
     } catch (error) {
-      console.error("Error creating token:", error);
+      console.error("[TOKEN CREATE] Error:", error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ 
           message: "Invalid token data", 
           errors: error.errors 
+        });
+      }
+      if ((error as any).message && (error as any).message.includes('fetch failed')) {
+        return res.status(503).json({ 
+          message: "Database temporarily unavailable. Please try again later.",
+          error: "Database connection failed"
         });
       }
       res.status(500).json({ message: "Internal server error" });
@@ -98,10 +151,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Token not found" });
       }
 
-      res.json(token);
+      res.json(toCamelCaseToken(token));
     } catch (error) {
       console.error("Error fetching token:", error);
-      res.status(500).json({ message: "Internal server error" });
+      // Return a more graceful error response
+      res.status(503).json({ 
+        message: "Database temporarily unavailable. Please try again later.",
+        error: "Database connection failed"
+      });
     }
   });
 

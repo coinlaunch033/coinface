@@ -34,13 +34,13 @@ export default function TokenPage() {
   const shareUrl = typeof window !== "undefined" ? window.location.href : "";
 
   const shareOnTwitter = (token: Token) => {
-    const text = `Check out ${token.tokenName} on MemeSite! 🚀 #${token.tokenName} #memecoin #crypto`;
+    const text = `Check out ${token.tokenName} on COINFACE! 🚀 #${token.tokenName} #memecoin #crypto`;
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`;
     window.open(url, '_blank');
   };
 
   const shareOnTelegram = (token: Token) => {
-    const text = `Check out ${token.tokenName} on MemeSite! 🚀`;
+    const text = `Check out ${token.tokenName} on COINFACE! 🚀`;
     const url = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
   };
@@ -69,23 +69,23 @@ export default function TokenPage() {
   // Update page title and meta tags
   useEffect(() => {
     if (token) {
-      document.title = `${token.tokenName} - MemeSite`;
+      document.title = `${token.tokenName} - COINFACE`;
       
       // Update meta description
       const metaDescription = document.querySelector('meta[name="description"]');
       if (metaDescription) {
-        metaDescription.setAttribute('content', `Trade and showcase ${token.tokenName} meme coin with MemeSite. View on DexScreener, BirdEye, and more.`);
+        metaDescription.setAttribute('content', `Trade and showcase ${token.tokenName} meme coin with COINFACE. View on DexScreener, Birdeye, and more.`);
       }
       
       // Update Open Graph tags
       const ogTitle = document.querySelector('meta[property="og:title"]');
       if (ogTitle) {
-        ogTitle.setAttribute('content', `${token.tokenName} - MemeSite`);
+        ogTitle.setAttribute('content', `${token.tokenName} - COINFACE`);
       }
       
       const ogDescription = document.querySelector('meta[property="og:description"]');
       if (ogDescription) {
-        ogDescription.setAttribute('content', `Trade and showcase ${token.tokenName} meme coin with MemeSite`);
+        ogDescription.setAttribute('content', `Trade and showcase ${token.tokenName} meme coin with COINFACE`);
       }
       
       const ogImage = document.querySelector('meta[property="og:image"]');
@@ -133,8 +133,8 @@ export default function TokenPage() {
       <nav className="relative z-10 px-6 py-4 flex justify-between items-center">
         <Link href="/">
           <div className="flex items-center space-x-4 cursor-pointer">
-            <div className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-              MemeSite
+            <div className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent tracking-wider">
+              COINFACE
             </div>
             <div className="text-sm bg-purple-500/20 px-3 py-1 rounded-full">
               Beta 🚀

@@ -14,8 +14,11 @@ import { apiRequest } from "@/lib/queryClient";
 import FloatingEmojis from "@/components/floating-emojis";
 import ChainSelector from "@/components/chain-selector";
 import ThemeSelector from "@/components/theme-selector";
+import WalletConnect from "@/components/wallet-connect";
+import PaymentFlow from "@/components/payment-flow";
+import { useWallet } from "@/contexts/wallet-context";
 import { useLocation, Link } from "wouter";
-import { dexLogos } from "@/assets/logos";
+import { BarChart3, Globe, TrendingUp, Zap, ExternalLink } from "lucide-react";
 
 const step1Schema = z.object({
   chain: z.string().min(1, "Please select a chain"),
@@ -37,18 +40,12 @@ type Step2Data = z.infer<typeof step2Schema>;
 
 const paymentAmounts = {
   solana: "~0.15 SOL",
-  ethereum: "~0.008 ETH",
-  base: "~0.008 ETH",
   bnb: "~0.05 BNB",
-  polygon: "~15 MATIC",
 };
 
 const chainNames = {
   solana: "Solana",
-  ethereum: "Ethereum",
-  base: "Base",
   bnb: "BNB Chain",
-  polygon: "Polygon",
 };
 
 export default function Home() {
@@ -58,6 +55,7 @@ export default function Home() {
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const { walletAddress, connectedChain } = useWallet();
 
   const step1Form = useForm<Step1Data>({
     resolver: zodResolver(step1Schema),
@@ -85,18 +83,31 @@ export default function Home() {
       return response.json();
     },
     onSuccess: (token) => {
+        console.log("Token response:", token);
+        const tokenName = token?.tokenName || token?.token_name || 'unknown';
       toast({
         title: "Token page is live! 🎉",
-        description: `Your token page is now live at /coin/${token.tokenName.toLowerCase()}`,
+          description: `Your token page is now live at /coin/${tokenName.toLowerCase()}`,
       });
-      setLocation(`/coin/${token.tokenName.toLowerCase()}`);
+        setLocation(`/coin/${tokenName.toLowerCase()}`);
     },
     onError: (error) => {
+      const errorMessage = error?.message || "Failed to create token. Please try again.";
+      
+      // Check if it's a database connection error
+      if (errorMessage.includes('Database temporarily unavailable')) {
+        toast({
+          title: "Database Connection Issue",
+          description: "The database is temporarily unavailable. Your token was created but may not be immediately accessible. Please try again in a few minutes.",
+          variant: "destructive",
+        });
+      } else {
       toast({
         title: "Error creating token",
-        description: error.message,
+          description: errorMessage,
         variant: "destructive",
       });
+      }
     },
   });
 
@@ -108,33 +119,8 @@ export default function Home() {
   });
 
   const handleStep1Submit = async (data: Step1Data) => {
-    setIsLoading(true);
-    
-    try {
-      // Process payment first
-      await paymentMutation.mutateAsync({
-        chain: data.chain,
-        amount: paymentAmounts[data.chain as keyof typeof paymentAmounts],
-        tokenName: "payment-step1", // Temporary name for payment
-      });
-      
-      // Payment successful, proceed to step 2
+    // Store the data for step 2, payment will be handled by PaymentFlow component
       setStep1Data(data);
-      setCurrentStep(2);
-      
-      toast({
-        title: "Payment successful!",
-        description: "Now customize your token promotion page",
-      });
-    } catch (error) {
-      toast({
-        title: "Payment failed",
-        description: "Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   const handleStep2Submit = async (data: Step2Data) => {
@@ -187,6 +173,37 @@ export default function Home() {
     step2Form.setValue("theme", themeId);
   };
 
+
+
+  const handlePaymentSuccess = () => {
+    if (step1Data) {
+      setCurrentStep(2);
+      toast({
+        title: "Payment successful!",
+        description: "Now customize your token promotion page",
+      });
+    } else {
+      // If no step1Data, we need to get it from the form
+      const formData = step1Form.getValues();
+      if (formData.chain && formData.tokenAddress) {
+        setStep1Data(formData);
+        setCurrentStep(2);
+        toast({
+          title: "Payment successful!",
+          description: "Now customize your token promotion page",
+        });
+      }
+    }
+  };
+
+  const handlePaymentError = (error: string) => {
+    toast({
+      title: "Payment failed",
+      description: error,
+      variant: "destructive",
+    });
+  };
+
   return (
     <div className="min-h-screen meme-gradient text-white relative overflow-hidden">
       <FloatingEmojis />
@@ -197,9 +214,9 @@ export default function Home() {
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent"
+            className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent tracking-wider"
           >
-            MemeSite
+            COINFACE
           </motion.div>
           <div className="text-sm bg-purple-500/20 px-3 py-1 rounded-full">
             Beta 🚀
@@ -212,9 +229,7 @@ export default function Home() {
               🎁 MemeDrop
             </Button>
           </Link>
-          <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 neon-glow">
-            Connect Wallet
-          </Button>
+          <WalletConnect />
         </div>
       </nav>
 
@@ -231,6 +246,7 @@ export default function Home() {
               <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
                 Promote Your Meme Coin
               </h1>
+              <div className="text-4xl md:text-6xl font-bold mb-6 text-white">+</div>
               <p className="text-xl md:text-2xl mb-8 text-gray-300 max-w-2xl mx-auto">
                 Get a <span className="text-green-400 font-bold">fully generated website</span> for your meme coin in 2 easy steps. 
                 Pay just <span className="text-yellow-400 font-bold">$15 USD</span> and start promoting! 🚀
@@ -246,8 +262,8 @@ export default function Home() {
                   <div className="text-sm text-gray-300">Flat Rate</div>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm px-6 py-3 rounded-lg">
-                  <div className="text-3xl font-bold text-purple-400">5</div>
-                  <div className="text-sm text-gray-300">Chains</div>
+                                  <div className="text-3xl font-bold text-purple-400">2</div>
+                <div className="text-sm text-gray-300">Chains</div>
                 </div>
               </div>
             </div>
@@ -302,36 +318,18 @@ export default function Home() {
                       />
 
                       {/* Payment Section */}
-                      <div className="bg-gradient-to-r from-purple-500 bg-opacity-20 to-pink-500 bg-opacity-20 rounded-lg p-6 mt-6">
-                        <h3 className="text-xl font-bold mb-4 flex items-center">
-                          💳 Payment - $15 USD
-                        </h3>
-                        <div className="text-sm text-gray-300 mb-4">
-                          Pay in native token of your selected chain. Rate automatically calculated.
+                      {step1Form.watch("chain") && step1Form.watch("tokenAddress") && (
+                        <div className="mt-6">
+                          <PaymentFlow
+                            amount={paymentAmounts[step1Form.watch("chain") as keyof typeof paymentAmounts]}
+                            chain={step1Form.watch("chain")}
+                            tokenName={step1Form.watch("tokenAddress")}
+                            walletAddress={walletAddress}
+                            onPaymentSuccess={handlePaymentSuccess}
+                            onPaymentError={handlePaymentError}
+                          />
                         </div>
-                        <div className="bg-white bg-opacity-10 rounded-lg p-4 mb-4">
-                          <div className="flex justify-between items-center">
-                            <span>Selected Chain:</span>
-                            <span className="font-bold text-purple-400">
-                              {step1Form.watch("chain") ? chainNames[step1Form.watch("chain") as keyof typeof chainNames] : "Select a chain"}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center mt-2">
-                            <span>Amount:</span>
-                            <span className="font-bold text-green-400">
-                              {step1Form.watch("chain") ? paymentAmounts[step1Form.watch("chain") as keyof typeof paymentAmounts] : "Select a chain"}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <Button
-                        type="submit"
-                        disabled={isLoading}
-                        className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 py-4 text-lg font-bold neon-glow"
-                      >
-                        {isLoading ? "Processing Payment..." : "Promote Coin 🚀"}
-                      </Button>
+                      )}
                     </form>
                   </Form>
                 </CardContent>
@@ -361,24 +359,28 @@ export default function Home() {
                 <div className="text-4xl mb-4">📈</div>
                 <h3 className="text-xl font-bold mb-3 text-green-400">Instant Results</h3>
                 <p className="text-gray-300 mb-6">
-                  Your coin will be promoted on <span className="text-yellow-400 font-bold">DexScreener</span>, <span className="text-blue-400 font-bold">GMGN</span>, <span className="text-purple-400 font-bold">Axiom</span>, and more! Plus get a <span className="text-green-400 font-bold">free website generated</span> for you with all the tools you need to succeed.
+                  Your coin will be promoted on <span className="text-yellow-400 font-bold">DexScreener</span>, <span className="text-blue-400 font-bold">GMGN</span>, <span className="text-orange-400 font-bold">Birdeye</span>, and more! Plus get a <span className="text-green-400 font-bold">free website generated</span> for you with all the tools you need to succeed.
                 </p>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-                  <div className="bg-white/10 backdrop-blur-sm px-4 py-3 rounded-lg flex flex-col items-center">
-                    <img src={dexLogos.dexscreener} alt="DexScreener" className="w-8 h-8 mb-2" />
-                    <div className="text-sm font-bold">DexScreener</div>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6">
+                  <div className="bg-white/10 backdrop-blur-sm px-4 py-3 rounded-lg flex flex-col items-center hover:bg-white/20 transition-all duration-200">
+                    <BarChart3 className="w-10 h-10 mb-2 text-blue-400" />
+                    <div className="text-sm font-bold text-blue-400">DexScreener</div>
                   </div>
-                  <div className="bg-white/10 backdrop-blur-sm px-4 py-3 rounded-lg flex flex-col items-center">
-                    <img src={dexLogos.gmgn} alt="GMGN" className="w-8 h-8 mb-2" />
-                    <div className="text-sm font-bold">GMGN</div>
+                  <div className="bg-white/10 backdrop-blur-sm px-4 py-3 rounded-lg flex flex-col items-center hover:bg-white/20 transition-all duration-200">
+                    <TrendingUp className="w-10 h-10 mb-2 text-orange-400" />
+                    <div className="text-sm font-bold text-orange-400">GMGN</div>
                   </div>
-                  <div className="bg-white/10 backdrop-blur-sm px-4 py-3 rounded-lg flex flex-col items-center">
-                    <img src={dexLogos.geckoterminal} alt="GeckoTerminal" className="w-8 h-8 mb-2" />
-                    <div className="text-sm font-bold">GeckoTerminal</div>
+                  <div className="bg-white/10 backdrop-blur-sm px-4 py-3 rounded-lg flex flex-col items-center hover:bg-white/20 transition-all duration-200">
+                    <Zap className="w-10 h-10 mb-2 text-purple-400" />
+                    <div className="text-sm font-bold text-purple-400">Birdeye</div>
                   </div>
-                  <div className="bg-white/10 backdrop-blur-sm px-4 py-3 rounded-lg flex flex-col items-center">
-                    <div className="text-2xl mb-2">🌐</div>
-                    <div className="text-sm font-bold">Free Website</div>
+                  <div className="bg-white/10 backdrop-blur-sm px-4 py-3 rounded-lg flex flex-col items-center hover:bg-white/20 transition-all duration-200">
+                    <Globe className="w-10 h-10 mb-2 text-green-400" />
+                    <div className="text-sm font-bold text-green-400">DexTools</div>
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-sm px-4 py-3 rounded-lg flex flex-col items-center hover:bg-white/20 transition-all duration-200">
+                    <ExternalLink className="w-10 h-10 mb-2 text-gray-400" />
+                    <div className="text-sm font-bold text-gray-400">Upcoming</div>
                   </div>
                 </div>
               </div>

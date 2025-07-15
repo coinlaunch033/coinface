@@ -16,10 +16,12 @@ A multi-chain meme coin promotion platform that helps creators instantly generat
 
 - **Frontend**: React + TypeScript + Vite
 - **Backend**: Node.js + Express
-- **Database**: Supabase (PostgreSQL)
+- **Database**: Neon (PostgreSQL)
 - **Styling**: Tailwind CSS + Framer Motion
 - **UI Components**: Radix UI + shadcn/ui
 - **Form Handling**: React Hook Form + Zod validation
+- **Wallet Integration**: MetaMask + Web3
+- **Payment Flow**: Crypto payments with multi-chain support
 
 ## 🚀 Quick Start
 
@@ -44,9 +46,7 @@ A multi-chain meme coin promotion platform that helps creators instantly generat
 3. **Set up environment variables**
    Create a `.env` file in the root directory:
    ```env
-   DATABASE_URL=your_supabase_connection_string
-   SUPABASE_URL=your_supabase_project_url
-   SUPABASE_ANON_KEY=your_supabase_anon_key
+   DATABASE_URL=your_neon_connection_string
    ```
 
 4. **Set up database**

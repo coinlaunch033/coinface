@@ -1,20 +1,20 @@
 // Blockchain logos
-export const SolanaLogo = '/src/assets/logos/blockchains/solana.svg';
-export const EthereumLogo = '/src/assets/logos/blockchains/ethereum.svg';
-export const BaseLogo = '/src/assets/logos/blockchains/base.svg';
-export const BnbLogo = '/src/assets/logos/blockchains/bnb.svg';
-export const PolygonLogo = '/src/assets/logos/blockchains/polygon.svg';
+import SolanaLogo from './blockchains/solana.svg';
+import EthereumLogo from './blockchains/ethereum.svg';
+import BaseLogo from './blockchains/base.svg';
+import BnbLogo from './blockchains/bnb.svg';
+import PolygonLogo from './blockchains/polygon.svg';
 
 // Social media logos
-export const TwitterLogo = '/src/assets/logos/socials/twitter.svg';
-export const RedditLogo = '/src/assets/logos/socials/reddit.svg';
-export const TelegramLogo = '/src/assets/logos/socials/telegram.svg';
+import TwitterLogo from './socials/twitter.svg';
+import RedditLogo from './socials/reddit.svg';
+import TelegramLogo from './socials/telegram.svg';
 
 // DEX terminal logos
-export const DexScreenerLogo = '/src/assets/logos/dex/dexscreener.svg';
-export const BirdEyeLogo = '/src/assets/logos/dex/birdeye.svg';
-export const GeckoTerminalLogo = '/src/assets/logos/dex/geckoterminal.svg';
-export const GmgnLogo = '/src/assets/logos/dex/gmgn.svg';
+import DexScreenerLogo from './dex/dexscreener.svg';
+import BirdEyeLogo from './dex/birdeye.svg';
+import GeckoTerminalLogo from './dex/geckoterminal.svg';
+import GmgnLogo from './dex/gmgn.svg';
 
 // Logo mapping objects
 export const blockchainLogos = {

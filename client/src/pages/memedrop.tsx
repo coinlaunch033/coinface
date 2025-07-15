@@ -39,7 +39,7 @@ export default function MemeDrop() {
   });
 
   // Get entry count from API
-  const { data: entryCount = 0 } = useQuery({
+  const { data: entryCount = 0 } = useQuery<number>({
     queryKey: ["/api/memedrop/entries"],
     enabled: true,
   });
@@ -121,8 +121,8 @@ export default function MemeDrop() {
       <nav className="relative z-10 px-6 py-4 flex justify-between items-center">
         <Link href="/">
           <div className="flex items-center space-x-4 cursor-pointer">
-            <div className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-              MemeSite
+            <div className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent tracking-wider">
+              COINFACE
             </div>
             <div className="text-sm bg-purple-500/20 px-3 py-1 rounded-full">
               Beta 🚀
