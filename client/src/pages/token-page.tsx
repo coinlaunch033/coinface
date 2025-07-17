@@ -10,14 +10,56 @@ import TokenCard from "@/components/token-card";
 import { apiRequest } from "@/lib/queryClient";
 import type { Token } from "@shared/schema";
 
+// Helper function to handle image URLs (local vs Cloudinary)
+const getImageUrl = (logoUrl: string | null): string => {
+  if (!logoUrl) return '';
+  
+  // If it's already a full URL (Cloudinary), return as is
+  if (logoUrl.startsWith('http://') || logoUrl.startsWith('https://')) {
+    return logoUrl;
+  }
+  
+  // If it's a local path (old uploads), construct the full URL
+  if (logoUrl.startsWith('/uploads/')) {
+    return `${window.location.origin}${logoUrl}`;
+  }
+  
+  // If it's just a filename, assume it's local
+  if (!logoUrl.includes('/')) {
+    return `${window.location.origin}/uploads/${logoUrl}`;
+  }
+  
+  return logoUrl;
+};
+
 export default function TokenPage() {
   const { tokenName } = useParams<{ tokenName: string }>();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [hasIncrementedView, setHasIncrementedView] = useState(false);
+  
+  console.log("[FRONTEND] TokenPage rendered with tokenName:", tokenName);
 
   const { data: token, isLoading, error } = useQuery<Token>({
     queryKey: ["/api/tokens", tokenName],
+    queryFn: async () => {
+      console.log("[FRONTEND] Fetching token:", tokenName);
+      const url = `/api/tokens/${tokenName}`;
+      console.log("[FRONTEND] Request URL:", url);
+      
+      const response = await fetch(url);
+      console.log("[FRONTEND] Response status:", response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log("[FRONTEND] Error response:", errorText);
+        throw new Error(`Failed to fetch token: ${response.status} - ${errorText}`);
+      }
+      
+      const data = await response.json();
+      console.log("[FRONTEND] Token data received:", data);
+      return data;
+    },
     enabled: !!tokenName,
   });
 
@@ -90,7 +132,7 @@ export default function TokenPage() {
       
       const ogImage = document.querySelector('meta[property="og:image"]');
       if (ogImage && token.logoUrl) {
-        ogImage.setAttribute('content', `${window.location.origin}${token.logoUrl}`);
+        ogImage.setAttribute('content', getImageUrl(token.logoUrl));
       }
     }
   }, [token]);
@@ -108,12 +150,16 @@ export default function TokenPage() {
   }
 
   if (error || !token) {
+    console.log("[FRONTEND] Error or no token:", { error, token, tokenName });
     return (
       <div className="min-h-screen meme-gradient flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">😢</div>
           <div className="text-2xl font-bold mb-2 text-white">Token Not Found</div>
-          <div className="text-gray-300 mb-6">The token you're looking for doesn't exist or has been removed.</div>
+          <div className="text-gray-300 mb-6">
+            The token you're looking for doesn't exist or has been removed.
+            {error && <div className="text-red-400 mt-2">Error: {error.message}</div>}
+          </div>
           <Link href="/">
             <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600">
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -133,8 +179,10 @@ export default function TokenPage() {
       <nav className="relative z-10 px-6 py-4 flex justify-between items-center">
         <Link href="/">
           <div className="flex items-center space-x-4 cursor-pointer">
-            <div className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent tracking-wider">
-              COINFACE
+            <div className="flex items-center space-x-3">
+              <div className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent tracking-wider">
+                Coinface
+              </div>
             </div>
             <div className="text-sm bg-purple-500/20 px-3 py-1 rounded-full">
               Beta 🚀

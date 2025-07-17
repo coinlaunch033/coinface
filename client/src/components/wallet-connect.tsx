@@ -1,101 +1,40 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { useWallet } from "@/contexts/wallet-context";
+import { useAppKitAccount, useDisconnect } from '@reown/appkit-controllers/react';
+import { Button } from './ui/button';
+import { Wallet, LogOut } from 'lucide-react';
 
-interface WalletConnectProps {
-  onConnect?: (address: string, chain: string) => void;
-  onDisconnect?: () => void;
-  className?: string;
-}
+export function WalletConnect() {
+  const { address, isConnected } = useAppKitAccount({ namespace: 'solana' });
+  const { disconnect } = useDisconnect();
 
-export default function WalletConnect({ onConnect, onDisconnect, className }: WalletConnectProps) {
-  const [isConnecting, setIsConnecting] = useState(false);
-  const { toast } = useToast();
-  const { isConnected, walletAddress, connectedChain, connect, disconnect, switchChain } = useWallet();
-
-  const handleConnect = async () => {
-    setIsConnecting(true);
-    
+  const handleDisconnect = async () => {
     try {
-      await connect();
-      onConnect?.(walletAddress, connectedChain);
-      
-      toast({
-        title: "Wallet Connected! 🎉",
-        description: `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)} on ${connectedChain}`,
-      });
+      await disconnect({ namespace: 'solana' });
+      console.log('Wallet disconnected successfully');
     } catch (error) {
-      console.error("Connection error:", error);
-      
-      if (error instanceof Error && error.message === "MetaMask not installed") {
-        toast({
-          title: "MetaMask Required",
-          description: "Please install MetaMask to connect your wallet.",
-          variant: "destructive",
-        });
-        
-        // Open MetaMask download page
-        window.open('https://metamask.io/download/', '_blank');
-      } else {
-        toast({
-          title: "Connection Failed",
-          description: "Failed to connect wallet. Please try again.",
-          variant: "destructive",
-        });
-      }
-    } finally {
-      setIsConnecting(false);
+      console.error('Error disconnecting wallet:', error);
     }
   };
 
-  const handleDisconnect = () => {
-    disconnect();
-    onDisconnect?.();
-    
-    toast({
-      title: "Wallet Disconnected",
-      description: "Your wallet has been disconnected.",
-    });
+  const formatAddress = (addr: string) => {
+    return `${addr.slice(0, 4)}...${addr.slice(-4)}`;
   };
 
-  const handleSwitchChain = async (targetChain: string) => {
-    try {
-      await switchChain(targetChain);
-      toast({
-        title: "Chain Switched",
-        description: `Switched to ${targetChain}`,
-      });
-    } catch (error) {
-      console.error("Chain switch error:", error);
-      toast({
-        title: "Chain Switch Failed",
-        description: "Failed to switch chain. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  if (isConnected) {
+  if (isConnected && address) {
     return (
-      <div className={`flex items-center space-x-2 ${className}`}>
-        <div className="text-sm text-gray-300">
-          {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 px-3 py-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
+          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+          <span className="text-sm font-medium text-green-700 dark:text-green-300">
+            {formatAddress(address)}
+          </span>
         </div>
         <Button
           variant="outline"
           size="sm"
-          onClick={() => handleSwitchChain('ethereum')}
-          className="text-xs"
-        >
-          Switch Chain
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
           onClick={handleDisconnect}
-          className="text-xs"
+          className="flex items-center gap-2"
         >
+          <LogOut className="w-4 h-4" />
           Disconnect
         </Button>
       </div>
@@ -103,14 +42,10 @@ export default function WalletConnect({ onConnect, onDisconnect, className }: Wa
   }
 
   return (
-    <Button
-      onClick={handleConnect}
-      disabled={isConnecting}
-      className={`bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 neon-glow ${className}`}
-    >
-      {isConnecting ? "Connecting..." : "Connect Wallet"}
-    </Button>
+    <appkit-button 
+      namespace="solana"
+      label="Connect Wallet"
+      size="sm"
+    />
   );
-}
-
- 
+} 

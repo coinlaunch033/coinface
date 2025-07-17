@@ -4,9 +4,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./neon-storage";
 import { insertTokenSchema, updateTokenThemeSchema, insertMemeDropEntrySchema } from "@shared/schema";
 import { z } from "zod";
-import multer from "multer";
-import path from "path";
-import fs from "fs";
+import { upload, getImageUrl } from "./cloud-storage";
 
 // NEON DB TOKEN CREATION CHECKLIST:
 // 1. Ensure DATABASE_URL is set and valid
@@ -21,21 +19,6 @@ import fs from "fs";
 // ---
 //
 // Enhanced /api/tokens endpoint below:
-// Configure multer for file uploads
-const upload = multer({
-  dest: 'uploads/',
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-    if (allowedTypes.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Invalid file type. Only JPEG, PNG, and GIF are allowed.'));
-    }
-  },
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
-  },
-});
 
 // Helper to convert snake_case to camelCase for token
 function toCamelCaseToken(token: any) {
@@ -77,22 +60,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Missing or invalid chain" });
       }
 
-      // Handle logo upload
+      // Handle logo upload to Cloudinary
       let logoUrl = null;
       if (req.file) {
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-        if (!allowedTypes.includes(req.file.mimetype)) {
-          console.error("[TOKEN CREATE] Invalid logo file type:", req.file.mimetype);
-          return res.status(400).json({ message: "Invalid logo file type. Only JPEG, PNG, and GIF are allowed." });
-        }
-        if (req.file.size > 5 * 1024 * 1024) {
-          console.error("[TOKEN CREATE] Logo file too large:", req.file.size);
-          return res.status(400).json({ message: "Logo file too large (max 5MB)." });
-        }
-        const logoFileName = `${Date.now()}-${req.file.originalname}`;
-        const logoPath = path.join('uploads', logoFileName);
-        fs.renameSync(req.file.path, logoPath);
-        logoUrl = `/uploads/${logoFileName}`;
+        logoUrl = getImageUrl(req.file);
+        console.log("[TOKEN CREATE] Logo uploaded to Cloudinary:", logoUrl);
       }
 
       // Validate token data
@@ -145,13 +117,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/tokens/:tokenName", async (req, res) => {
     try {
       const { tokenName } = req.params;
+      console.log("[TOKEN FETCH] Looking for token:", tokenName);
+      
       const token = await storage.getTokenByName(tokenName);
+      console.log("[TOKEN FETCH] Found token:", token ? token.tokenName : "null");
       
       if (!token) {
+        console.log("[TOKEN FETCH] Token not found for:", tokenName);
         return res.status(404).json({ message: "Token not found" });
       }
 
-      res.json(toCamelCaseToken(token));
+      const camelCaseToken = toCamelCaseToken(token);
+      console.log("[TOKEN FETCH] Returning token:", camelCaseToken.tokenName);
+      res.json(camelCaseToken);
     } catch (error) {
       console.error("Error fetching token:", error);
       // Return a more graceful error response
@@ -279,8 +257,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Serve uploaded files
-  app.use('/uploads', express.static('uploads'));
+  // Cloudinary handles image serving, no need for local static files
 
   const httpServer = createServer(app);
   return httpServer;

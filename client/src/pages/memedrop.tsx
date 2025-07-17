@@ -121,8 +121,10 @@ export default function MemeDrop() {
       <nav className="relative z-10 px-6 py-4 flex justify-between items-center">
         <Link href="/">
           <div className="flex items-center space-x-4 cursor-pointer">
-            <div className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent tracking-wider">
-              COINFACE
+            <div className="flex items-center space-x-3">
+              <div className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent tracking-wider">
+                Coinface
+              </div>
             </div>
             <div className="text-sm bg-purple-500/20 px-3 py-1 rounded-full">
               Beta 🚀

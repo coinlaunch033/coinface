@@ -75,12 +75,17 @@ export class NeonStorage implements IStorage {
   }
 
   async getTokenByName(tokenName: string): Promise<Token | undefined> {
+    console.log("[STORAGE] Searching for token:", tokenName);
     const result = await sql`
       SELECT * FROM tokens 
       WHERE token_name ILIKE ${tokenName}
       ORDER BY created_at DESC 
       LIMIT 1
     `;
+    console.log("[STORAGE] Query result:", result.length, "rows");
+    if (result.length > 0) {
+      console.log("[STORAGE] Found token:", result[0].token_name);
+    }
     return result[0] as Token | undefined;
   }
 

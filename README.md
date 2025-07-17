@@ -1,10 +1,12 @@
-# MemeMarketer 🚀
+# Coinface 🚀
 
 A multi-chain meme coin promotion platform that helps creators instantly generate promotional websites for their tokens with social sharing and DEX integration.
 
+**🌐 Website**: https://coinface.fun
+
 ## 🌟 Features
 
-- **Multi-Chain Support**: Solana, Ethereum, Base, BNB Chain, Polygon
+- **Solana Support**: Full Solana blockchain integration
 - **Instant Website Generation**: Create promotional pages in seconds
 - **Social Media Integration**: Share on Twitter, Reddit, Telegram
 - **DEX Terminal Links**: Direct links to DexScreener, BirdEye, GeckoTerminal, GMGN
@@ -28,7 +30,7 @@ A multi-chain meme coin promotion platform that helps creators instantly generat
 ### Prerequisites
 - Node.js 18+ 
 - npm or yarn
-- Supabase account
+- Neon Database account
 
 ### Installation
 
@@ -47,6 +49,10 @@ A multi-chain meme coin promotion platform that helps creators instantly generat
    Create a `.env` file in the root directory:
    ```env
    DATABASE_URL=your_neon_connection_string
+   CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
+   CLOUDINARY_API_KEY=your_cloudinary_api_key
+   CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+   VITE_REOWN_PROJECT_ID=your_reown_project_id
    ```
 
 4. **Set up database**
@@ -90,7 +96,12 @@ MemeMarketer/
 
 ### Vercel (Recommended)
 1. Connect your GitHub repository to Vercel
-2. Set environment variables in Vercel dashboard
+2. Set environment variables in Vercel dashboard:
+   - `DATABASE_URL`
+   - `CLOUDINARY_CLOUD_NAME`
+   - `CLOUDINARY_API_KEY`
+   - `CLOUDINARY_API_SECRET`
+   - `VITE_REOWN_PROJECT_ID`
 3. Deploy automatically on push to main branch
 
 ### Other Platforms

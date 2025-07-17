@@ -12,13 +12,17 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import FloatingEmojis from "@/components/floating-emojis";
-import ChainSelector from "@/components/chain-selector";
 import ThemeSelector from "@/components/theme-selector";
-import WalletConnect from "@/components/wallet-connect";
-import PaymentFlow from "@/components/payment-flow";
-import { useWallet } from "@/contexts/wallet-context";
+import WalletBalance from "@/components/wallet-balance";
+
+import { useAppKitAccount } from '@reown/appkit-controllers/react';
+import { useAppKitProvider } from '@reown/appkit/library/react';
+import { useAppKitConnection } from '@reown/appkit-adapter-solana/react';
+import type { Provider } from '@reown/appkit-adapter-solana/react';
+import { LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
 import { useLocation, Link } from "wouter";
 import { BarChart3, Globe, TrendingUp, Zap, ExternalLink } from "lucide-react";
+import { WalletConnect } from "@/components/wallet-connect";
 
 const step1Schema = z.object({
   chain: z.string().min(1, "Please select a chain"),
@@ -39,13 +43,11 @@ type Step1Data = z.infer<typeof step1Schema>;
 type Step2Data = z.infer<typeof step2Schema>;
 
 const paymentAmounts = {
-  solana: "~0.15 SOL",
-  bnb: "~0.05 BNB",
+  solana: "~0.1 SOL",
 };
 
 const chainNames = {
   solana: "Solana",
-  bnb: "BNB Chain",
 };
 
 export default function Home() {
@@ -53,14 +55,19 @@ export default function Home() {
   const [step1Data, setStep1Data] = useState<Step1Data | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const { walletAddress, connectedChain } = useWallet();
+  
+  // Use Reown AppKit hooks for wallet connection and provider
+  const { address, isConnected } = useAppKitAccount({ namespace: 'solana' });
+  const { walletProvider } = useAppKitProvider<Provider>('solana');
+  const { connection } = useAppKitConnection();
 
   const step1Form = useForm<Step1Data>({
     resolver: zodResolver(step1Schema),
     defaultValues: {
-      chain: "",
+      chain: "solana",
       tokenAddress: "",
     },
   });
@@ -119,8 +126,12 @@ export default function Home() {
   });
 
   const handleStep1Submit = async (data: Step1Data) => {
-    // Store the data for step 2, payment will be handled by PaymentFlow component
+    // Trigger payment directly when promote button is clicked
+    if (data.tokenAddress) {
       setStep1Data(data);
+      // Don't show payment modal, trigger payment directly
+      await handleDirectPayment(data);
+    }
   };
 
   const handleStep2Submit = async (data: Step2Data) => {
@@ -165,9 +176,7 @@ export default function Home() {
     }
   };
 
-  const handleChainSelect = (chainId: string) => {
-    step1Form.setValue("chain", chainId);
-  };
+
 
   const handleThemeSelect = (themeId: string) => {
     step2Form.setValue("theme", themeId);
@@ -175,34 +184,124 @@ export default function Home() {
 
 
 
-  const handlePaymentSuccess = () => {
-    if (step1Data) {
-      setCurrentStep(2);
+
+
+  const handleDirectPayment = async (data: Step1Data) => {
+    if (!isConnected || !address) {
       toast({
-        title: "Payment successful!",
-        description: "Now customize your token promotion page",
+        title: "Wallet not connected",
+        description: "Please connect your wallet first",
+        variant: "destructive",
       });
-    } else {
-      // If no step1Data, we need to get it from the form
-      const formData = step1Form.getValues();
-      if (formData.chain && formData.tokenAddress) {
-        setStep1Data(formData);
-        setCurrentStep(2);
+      return;
+    }
+
+    if (!walletProvider) {
+      toast({
+        title: "Wallet provider not available",
+        description: "Please reconnect your wallet",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!connection) {
+      toast({
+        title: "Wallet connection not available",
+        description: "Please reconnect your wallet",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Parse amount
+      const amount = "0.11";
+      const cleanAmount = amount.replace('~', '').trim();
+      const amountInLamports = parseFloat(cleanAmount) * LAMPORTS_PER_SOL;
+
+      // Check wallet balance BEFORE attempting transaction
+      console.log('Checking wallet balance...');
+      const publicKey = new PublicKey(address);
+      const balance = await connection.getBalance(publicKey);
+      const solBalance = balance / LAMPORTS_PER_SOL;
+      
+      console.log('Current balance:', solBalance, 'SOL');
+      console.log('Required amount:', cleanAmount, 'SOL');
+      
+      // Add a small buffer for transaction fees (0.001 SOL)
+      const requiredAmount = parseFloat(cleanAmount) + 0.001;
+      
+      if (solBalance < requiredAmount) {
         toast({
-          title: "Payment successful!",
-          description: "Now customize your token promotion page",
+          title: "Insufficient Balance",
+          description: `You need at least ${requiredAmount.toFixed(3)} SOL (including fees). Current balance: ${solBalance.toFixed(4)} SOL`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Balance check passed. Creating transaction with Reown AppKit...');
+      console.log('Amount:', cleanAmount, 'SOL');
+      console.log('From:', address);
+      console.log('To:', "5xDHKXERdpPGoY3bofLcjc4rRrMy22qRem588PgdR2RP");
+
+      // Create transaction
+      const transaction = new Transaction().add(
+        SystemProgram.transfer({
+          fromPubkey: new PublicKey(address),
+          toPubkey: new PublicKey("5xDHKXERdpPGoY3bofLcjc4rRrMy22qRem588PgdR2RP"),
+          lamports: amountInLamports,
+        })
+      );
+
+      // Get latest blockhash from connection
+      const { blockhash } = await connection.getLatestBlockhash();
+
+      // Set transaction details
+      transaction.recentBlockhash = blockhash;
+      transaction.feePayer = new PublicKey(address);
+
+      // Send transaction using the wallet provider - this will trigger wallet popup
+      const signature = await walletProvider.signAndSendTransaction(transaction);
+      
+      console.log('Transaction sent:', signature);
+      
+      // Success
+      toast({
+        title: "Payment Sent! 🎉",
+        description: "Transaction submitted successfully. Proceeding to next step...",
+      });
+      
+      // Proceed to step 2
+      setCurrentStep(2);
+      
+    } catch (error: any) {
+      console.error("Payment error:", error);
+      
+      if (error.message?.includes('User rejected') || error.message?.includes('User cancelled')) {
+        toast({
+          title: "Transaction Cancelled",
+          description: "You cancelled the transaction in your wallet.",
+          variant: "destructive",
+        });
+      } else if (error.message?.includes('Insufficient funds')) {
+        toast({
+          title: "Insufficient Balance",
+                                  description: "You need at least 0.1 SOL to complete this transaction.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Payment Failed",
+          description: error.message || "There was an error processing your payment.",
+          variant: "destructive",
         });
       }
     }
   };
 
-  const handlePaymentError = (error: string) => {
-    toast({
-      title: "Payment failed",
-      description: error,
-      variant: "destructive",
-    });
-  };
+
 
   return (
     <div className="min-h-screen meme-gradient text-white relative overflow-hidden">
@@ -214,9 +313,11 @@ export default function Home() {
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent tracking-wider"
+            className="flex items-center space-x-3"
           >
-            COINFACE
+            <div className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent tracking-wider">
+              Coinface
+            </div>
           </motion.div>
           <div className="text-sm bg-purple-500/20 px-3 py-1 rounded-full">
             Beta 🚀
@@ -273,28 +374,17 @@ export default function Home() {
               <Card className="glass-card p-8">
                 <CardContent className="p-0">
                   <div className="flex items-center justify-center mb-6">
-                    <div className="bg-purple-500 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold mr-4">1</div>
-                    <h2 className="text-2xl font-bold">Select Chain & Pay $15</h2>
+                    <h2 className="text-2xl font-bold text-purple-500">Promote Your Coin</h2>
                   </div>
                   
                   <Form {...step1Form}>
                     <form onSubmit={step1Form.handleSubmit(handleStep1Submit)} className="space-y-6">
-                      <FormField
-                        control={step1Form.control}
-                        name="chain"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-lg font-semibold">Choose Your Chain</FormLabel>
-                            <FormControl>
-                              <ChainSelector
-                                selectedChain={field.value}
-                                onChainSelect={handleChainSelect}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                      {/* Solana Chain Display */}
+                      <div className="flex justify-center mb-6">
+                        <div className="px-6 py-3 bg-gradient-to-r from-green-400 to-emerald-500 text-white font-semibold rounded-lg cursor-default shadow-lg shadow-green-500/25 animate-pulse">
+                          SOLANA
+                        </div>
+                      </div>
 
                       <FormField
                         control={step1Form.control}
@@ -317,19 +407,19 @@ export default function Home() {
                         )}
                       />
 
-                      {/* Payment Section */}
-                      {step1Form.watch("chain") && step1Form.watch("tokenAddress") && (
-                        <div className="mt-6">
-                          <PaymentFlow
-                            amount={paymentAmounts[step1Form.watch("chain") as keyof typeof paymentAmounts]}
-                            chain={step1Form.watch("chain")}
-                            tokenName={step1Form.watch("tokenAddress")}
-                            walletAddress={walletAddress}
-                            onPaymentSuccess={handlePaymentSuccess}
-                            onPaymentError={handlePaymentError}
-                          />
+                      {/* Promote Button - Always visible but conditionally enabled */}
+                      <div className="space-y-3">
+                        <Button
+                          type="submit"
+                          disabled={!step1Form.watch("tokenAddress") || !isConnected}
+                          className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {!isConnected ? "Connect Wallet to Promote" : "Promote"}
+                        </Button>
+                        <div className="text-center text-sm text-gray-400">
+                          Fee: ~0.1 SOL
                         </div>
-                      )}
+                      </div>
                     </form>
                   </Form>
                 </CardContent>
@@ -344,7 +434,7 @@ export default function Home() {
                   <div className="text-4xl mb-4">🚀</div>
                   <h3 className="text-xl font-bold mb-3 text-purple-400">Step 1: Promote Your Coin</h3>
                   <p className="text-gray-300">
-                    Select your blockchain, enter your token address, and pay just $15 USD equivalent to get started. No complex setup required.
+                    Enter your token address and pay just $15 USD equivalent to get started. No complex setup required.
                   </p>
                 </div>
                 <div className="text-center">
@@ -504,6 +594,8 @@ export default function Home() {
           </motion.div>
         )}
       </div>
+
+
 
       {/* Loading Overlay - Only for step 2 generation */}
       {isGenerating && (

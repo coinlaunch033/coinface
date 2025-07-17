@@ -7,6 +7,28 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import type { Token } from "@shared/schema";
 
+// Helper function to handle image URLs (local vs Cloudinary)
+const getImageUrl = (logoUrl: string | null): string => {
+  if (!logoUrl) return '';
+  
+  // If it's already a full URL (Cloudinary), return as is
+  if (logoUrl.startsWith('http://') || logoUrl.startsWith('https://')) {
+    return logoUrl;
+  }
+  
+  // If it's a local path (old uploads), construct the full URL
+  if (logoUrl.startsWith('/uploads/')) {
+    return `${window.location.origin}${logoUrl}`;
+  }
+  
+  // If it's just a filename, assume it's local
+  if (!logoUrl.includes('/')) {
+    return `${window.location.origin}/uploads/${logoUrl}`;
+  }
+  
+  return logoUrl;
+};
+
 interface TokenCardProps {
   token: Token;
   className?: string;
@@ -16,7 +38,6 @@ const chainColors = {
   solana: "bg-purple-500",
   ethereum: "bg-blue-500", 
   base: "bg-blue-600",
-  bnb: "bg-yellow-500",
   polygon: "bg-purple-600",
 };
 
@@ -24,7 +45,7 @@ const chainColors = {
 const urlTemplates = {
   dexscreener: (chain: string, tokenAddress: string) => `https://dexscreener.com/${chain}/${tokenAddress}`,
   dextools: (chain: string, tokenAddress: string) => `https://www.dextools.io/app/en/${chain}/pair-explorer/${tokenAddress}`,
-  gmgn: (chain: string, tokenAddress: string) => `https://gmgn.ai/${chain === 'solana' ? 'sol' : 'bnb'}/token/${tokenAddress}`,
+  gmgn: (chain: string, tokenAddress: string) => `https://gmgn.ai/sol/token/${tokenAddress}`,
   birdeye: (chain: string, tokenAddress: string) => `https://birdeye.so/token/${tokenAddress}?chain=${chain}`,
 };
 
@@ -97,7 +118,6 @@ const chainIcons = {
   solana: Circle,
   ethereum: Hexagon,
   base: Square,
-  bnb: Circle,
   polygon: Hexagon,
 };
 
@@ -128,7 +148,7 @@ export default function TokenCard({ token, className }: TokenCardProps) {
 
   const handleCopyLink = async () => {
     try {
-      const url = `${window.location.origin}/coin/${token.tokenName?.toLowerCase() || 'unknown'}`;
+      const url = `https://coinface.fun/coin/${token.tokenName?.toLowerCase() || 'unknown'}`;
       await navigator.clipboard.writeText(url);
       toast({
         title: "Link copied!",
@@ -144,7 +164,7 @@ export default function TokenCard({ token, className }: TokenCardProps) {
   };
 
   const handleSocialShare = (platform: string) => {
-    const url = `${window.location.origin}/coin/${token.tokenName?.toLowerCase() || 'unknown'}`;
+    const url = `https://coinface.fun/coin/${token.tokenName?.toLowerCase() || 'unknown'}`;
     const text = `Check out my new meme coin ${token.tokenName || 'Unknown Token'}! 🚀`;
     
     let shareUrl = "";
@@ -215,15 +235,20 @@ export default function TokenCard({ token, className }: TokenCardProps) {
             <div className="flex-shrink-0">
               {token.logoUrl ? (
                 <img 
-                  src={token.logoUrl} 
+                  src={getImageUrl(token.logoUrl)} 
                   alt={`${token.tokenName} Logo`} 
                   className="w-32 h-32 rounded-full border-4 border-primary shadow-lg object-cover"
+                  onError={(e) => {
+                    // Fallback to placeholder if image fails to load
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    target.nextElementSibling?.classList.remove('hidden');
+                  }}
                 />
-              ) : (
-                <div className="w-32 h-32 rounded-full border-4 border-primary shadow-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-4xl font-bold">
-                  {token.tokenName?.charAt(0)?.toUpperCase() || '?'}
-                </div>
-              )}
+              ) : null}
+              <div className={`w-32 h-32 rounded-full border-4 border-primary shadow-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-4xl font-bold ${token.logoUrl ? 'hidden' : ''}`}>
+                {token.tokenName?.charAt(0)?.toUpperCase() || '?'}
+              </div>
               {/* Chain logo badge */}
               <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-white rounded-full p-1 border-2 border-primary">
                 <Circle className="w-8 h-8" />
@@ -272,7 +297,7 @@ export default function TokenCard({ token, className }: TokenCardProps) {
             
             {!isAddressValid ? (
               <div className="text-center mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
-                <div className="text-red-400 font-semibold">❌ Invalid token address for {token.chain || 'selected chain'}</div>
+                <div className="text-red-400 font-semibold">❌ Invalid Solana token address</div>
                 <div className="text-sm text-red-300 mt-1">
                   {token.chain === 'solana' 
                     ? 'Solana addresses must be Base58 format (32-44 characters)'

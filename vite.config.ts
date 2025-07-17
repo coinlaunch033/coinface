@@ -36,5 +36,19 @@ export default defineConfig({
       strict: true,
       deny: ["**/.*"],
     },
+    proxy: {
+      // Proxy WalletConnect requests to avoid CORS issues
+      '/e': {
+        target: 'https://pulse.walletconnect.org',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/e/, '/e')
+      }
+    },
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+      'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization'
+    }
   },
 });
