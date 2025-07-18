@@ -8,4 +8,7 @@ uploads/
 .vscode/
 .idea/
 *.md
-!README.md 
+!README.md
+server/
+shared/
+supabase/ 

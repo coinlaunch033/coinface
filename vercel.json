@@ -5,11 +5,16 @@
       "src": "client/package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "dist"
+        "distDir": "dist",
+        "buildCommand": "npm run build"
       }
     }
   ],
   "routes": [
+    {
+      "src": "/assets/(.*)",
+      "dest": "client/dist/assets/$1"
+    },
     {
       "src": "/(.*)",
       "dest": "client/dist/$1"
