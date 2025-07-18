@@ -25,7 +25,7 @@ try {
     metadata: {
       name: 'Coinface',
       description: 'Meme token marketing platform',
-      url: 'https://coinface.fun',
+      url: 'https://www.coinface.fun',
       icons: ['/favicon.ico']
     },
     themeMode: 'dark',
