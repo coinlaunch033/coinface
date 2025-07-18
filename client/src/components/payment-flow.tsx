@@ -106,8 +106,8 @@ export default function PaymentFlow({
       console.log('Current balance:', solBalance, 'SOL');
       console.log('Required amount:', cleanAmount, 'SOL');
       
-      // Add a small buffer for transaction fees (0.001 SOL)
-      const requiredAmount = parseFloat(cleanAmount) + 0.001;
+      // Add a small buffer for transaction fees (0.0001 SOL for testing)
+      const requiredAmount = parseFloat(cleanAmount) + 0.0001;
       
       if (solBalance < requiredAmount) {
         setError(`Insufficient balance. You need at least ${requiredAmount.toFixed(3)} SOL (including fees). Current balance: ${solBalance.toFixed(4)} SOL`);
