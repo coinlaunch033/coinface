@@ -205,7 +205,7 @@ export default function Home() {
 
     try {
       // Parse amount
-      const amount = "0.11";
+      const amount = "0.01";
       const cleanAmount = amount.replace('~', '').trim();
       const amountInLamports = parseFloat(cleanAmount) * LAMPORTS_PER_SOL;
 
@@ -277,7 +277,7 @@ export default function Home() {
       } else if (error.message?.includes('Insufficient funds')) {
         toast({
           title: "Insufficient Balance",
-                                  description: "You need at least 0.1 SOL to complete this transaction.",
+          description: "You need at least 0.01 SOL to complete this transaction.",
           variant: "destructive",
         });
       } else {
@@ -406,7 +406,7 @@ export default function Home() {
                           {!isConnected ? "Connect Wallet to Promote" : "Promote"}
                         </Button>
                         <div className="text-center text-sm text-gray-400">
-                          Fee: ~0.1 SOL
+                          Fee: ~0.01 SOL
                         </div>
                       </div>
                     </form>
