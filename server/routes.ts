@@ -43,6 +43,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("[TOKEN CREATE] Request body:", req.body);
       console.log("[TOKEN CREATE] Request file:", req.file);
+      console.log("[TOKEN CREATE] Request headers:", req.headers);
       
       const { tokenName, tokenAddress, chain, theme = "dark", buttonStyle = "rounded", fontStyle = "sans" } = req.body;
       
@@ -63,11 +64,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Handle logo upload to Cloudinary
       let logoUrl = null;
       if (req.file) {
-        logoUrl = getImageUrl(req.file);
-        console.log("[TOKEN CREATE] Logo uploaded to Cloudinary:", logoUrl);
+        try {
+          logoUrl = getImageUrl(req.file);
+          console.log("[TOKEN CREATE] Logo uploaded to Cloudinary:", logoUrl);
+        } catch (uploadError) {
+          console.error("[TOKEN CREATE] Logo upload failed:", uploadError);
+          // Continue without logo if upload fails
+        }
       }
 
       // Validate token data
+      console.log("[TOKEN CREATE] Validating token data:", { tokenName, tokenAddress, chain, logoUrl, theme, buttonStyle, fontStyle });
       const validatedToken = insertTokenSchema.parse({
         tokenName,
         tokenAddress,
@@ -78,7 +85,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         fontStyle,
       });
 
+      console.log("[TOKEN CREATE] Creating token in database...");
       const token = await storage.createToken(validatedToken);
+      console.log("[TOKEN CREATE] Token created successfully:", token.id);
       
       // Automatically enter into MemeDrop when token is created
       try {
@@ -89,27 +98,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
           twitter: undefined,
           email: undefined,
         });
+        console.log("[TOKEN CREATE] MemeDrop entry created successfully");
       } catch (memeDropError) {
         console.error("[TOKEN CREATE] Error creating MemeDrop entry:", memeDropError);
         // Continue even if MemeDrop entry fails
       }
       
+      console.log("[TOKEN CREATE] Returning success response");
       res.status(201).json(token);
     } catch (error) {
-      console.error("[TOKEN CREATE] Error:", error);
+      console.error("[TOKEN CREATE] Error details:", error);
+      console.error("[TOKEN CREATE] Error stack:", error.stack);
+      
       if (error instanceof z.ZodError) {
+        console.error("[TOKEN CREATE] Validation errors:", error.errors);
         return res.status(400).json({ 
           message: "Invalid token data", 
           errors: error.errors 
         });
       }
+      
       if ((error as any).message && (error as any).message.includes('fetch failed')) {
+        console.error("[TOKEN CREATE] Database connection failed");
         return res.status(503).json({ 
           message: "Database temporarily unavailable. Please try again later.",
           error: "Database connection failed"
         });
       }
-      res.status(500).json({ message: "Internal server error" });
+      
+      console.error("[TOKEN CREATE] Unknown error, returning 500");
+      res.status(500).json({ 
+        message: "Internal server error",
+        error: error.message || "Unknown error occurred"
+      });
     }
   });
 
