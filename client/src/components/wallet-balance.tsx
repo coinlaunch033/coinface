@@ -11,7 +11,7 @@ interface WalletBalanceProps {
   showWarning?: boolean;
 }
 
-export default function WalletBalance({ requiredAmount = 0.011, showWarning = true }: WalletBalanceProps) {
+export default function WalletBalance({ requiredAmount = 0.01, showWarning = true }: WalletBalanceProps) {
   const [balance, setBalance] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
