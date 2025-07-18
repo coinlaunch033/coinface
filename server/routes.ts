@@ -70,6 +70,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("[TOKEN CREATE] Request body:", req.body);
       console.log("[TOKEN CREATE] Request file:", req.file);
       console.log("[TOKEN CREATE] Request headers:", req.headers);
+      console.log("[TOKEN CREATE] Environment check:", {
+        hasDatabaseUrl: !!process.env.DATABASE_URL,
+        hasCloudinaryConfig: !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET)
+      });
       
       const { tokenName, tokenAddress, chain, theme = "dark", buttonStyle = "rounded", fontStyle = "sans" } = req.body;
       
@@ -91,12 +95,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let logoUrl = null;
       if (req.file) {
         try {
+          console.log("[TOKEN CREATE] Processing logo file:", {
+            originalname: req.file.originalname,
+            mimetype: req.file.mimetype,
+            size: req.file.size,
+            path: req.file.path
+          });
           logoUrl = getImageUrl(req.file);
-          console.log("[TOKEN CREATE] Logo uploaded to Cloudinary:", logoUrl);
+          console.log("[TOKEN CREATE] Logo uploaded successfully:", logoUrl);
         } catch (uploadError: unknown) {
           console.error("[TOKEN CREATE] Logo upload failed:", uploadError);
           // Continue without logo if upload fails
         }
+      } else {
+        console.log("[TOKEN CREATE] No logo file provided");
       }
 
       // Validate token data
@@ -127,6 +139,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("[TOKEN CREATE] Token created successfully:", token.id);
       } catch (dbError) {
         console.error("[TOKEN CREATE] Database operation failed:", dbError);
+        console.error("[TOKEN CREATE] Database error details:", {
+          message: dbError instanceof Error ? dbError.message : 'Unknown error',
+          stack: dbError instanceof Error ? dbError.stack : undefined,
+          name: dbError instanceof Error ? dbError.name : undefined
+        });
         throw new Error(`Database operation failed: ${dbError instanceof Error ? dbError.message : 'Unknown error'}`);
       }
       

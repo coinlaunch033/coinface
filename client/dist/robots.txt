@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://coinface.fun/sitemap.xml
+
+# Disallow admin or private areas (if any)
+Disallow: /api/
+Disallow: /admin/
+Disallow: /private/
+
+# Allow all other content
+Allow: /coin/
+Allow: /memedrop/
+Allow: /assets/
+Allow: /uploads/
+
+# Crawl delay (optional)
+Crawl-delay: 1 
