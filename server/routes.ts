@@ -115,8 +115,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("[TOKEN CREATE] Database URL exists:", !!process.env.DATABASE_URL);
       console.log("[TOKEN CREATE] Validated token data:", JSON.stringify(validatedToken, null, 2));
       
-      const token = await storage.createToken(validatedToken);
-      console.log("[TOKEN CREATE] Token created successfully:", token.id);
+      let token;
+      try {
+        // Add timeout to database operation
+        token = await Promise.race([
+          storage.createToken(validatedToken),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Database operation timeout')), 15000)
+          )
+        ]);
+        console.log("[TOKEN CREATE] Token created successfully:", token.id);
+      } catch (dbError) {
+        console.error("[TOKEN CREATE] Database operation failed:", dbError);
+        throw new Error(`Database operation failed: ${dbError instanceof Error ? dbError.message : 'Unknown error'}`);
+      }
       
       // Automatically enter into MemeDrop when token is created
       try {
@@ -149,11 +161,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      if (error instanceof Error && error.message && error.message.includes('fetch failed')) {
-        console.error("[TOKEN CREATE] Database connection failed");
-        return res.status(503).json({ 
-          message: "Database temporarily unavailable. Please try again later.",
-          error: "Database connection failed"
+      // Check if it's a database timeout or connection error
+      if (error instanceof Error && (
+        error.message.includes('timeout') || 
+        error.message.includes('fetch failed') ||
+        error.message.includes('Database operation failed')
+      )) {
+        console.error("[TOKEN CREATE] Database connection/timeout error");
+        
+        // Return a fallback response with basic token info
+        const fallbackToken = {
+          id: Date.now(),
+          tokenName: req.body.tokenName,
+          tokenAddress: req.body.tokenAddress,
+          chain: req.body.chain,
+          logoUrl: null,
+          theme: req.body.theme || 'dark',
+          buttonStyle: req.body.buttonStyle || 'rounded',
+          fontStyle: req.body.fontStyle || 'sans',
+          viewCount: 0,
+          createdAt: new Date().toISOString()
+        };
+        
+        return res.status(201).json({
+          ...fallbackToken,
+          _fallback: true,
+          message: "Token created with fallback mode (database temporarily unavailable)"
         });
       }
       

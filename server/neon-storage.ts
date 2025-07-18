@@ -1,15 +1,23 @@
-import { neon } from '@neondatabase/serverless';
+import { neon, neonConfig } from '@neondatabase/serverless';
 import { type User, type InsertUser, type Token, type InsertToken, type UpdateTokenTheme, type InsertMemeDropEntry, type MemeDropEntry } from "./types";
 
 if (!process.env.DATABASE_URL) {
   throw new Error('Missing DATABASE_URL environment variable');
 }
 
+// Configure Neon for serverless
+neonConfig.fetchConnectionCache = true;
+
 const sql = neon(process.env.DATABASE_URL);
 
-// Test database connection
+// Test database connection with timeout
 console.log('[STORAGE] Testing database connection...');
-sql`SELECT 1 as test`
+Promise.race([
+  sql`SELECT 1 as test`,
+  new Promise((_, reject) => 
+    setTimeout(() => reject(new Error('Database connection timeout')), 10000)
+  )
+])
   .then(() => console.log('[STORAGE] Database connection successful'))
   .catch((error) => console.error('[STORAGE] Database connection failed:', error));
 
