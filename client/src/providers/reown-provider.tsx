@@ -12,38 +12,34 @@ interface ReownAppKitProviderProps {
 const queryClient = new QueryClient();
 
 // Create AppKit at module level (as per official example)
-const projectId = import.meta.env.VITE_REOWN_PROJECT_ID || import.meta.env.REOWN_PROJECT_ID;
+const projectId = import.meta.env.VITE_REOWN_PROJECT_ID || import.meta.env.REOWN_PROJECT_ID || 'default-project-id';
 
-if (!projectId) {
-  console.error('Reown project ID not found in environment variables. Please set VITE_REOWN_PROJECT_ID or REOWN_PROJECT_ID.');
-} else {
-  console.log('ReownAppKitProvider: Initializing with project ID:', projectId);
+console.log('ReownAppKitProvider: Using project ID:', projectId);
+
+try {
+  // Create Solana adapter
+  const solanaAdapter = new SolanaAdapter();
   
-  try {
-    // Create Solana adapter
-    const solanaAdapter = new SolanaAdapter();
-    
-    createAppKit({
-      projectId,
-      metadata: {
-        name: 'Coinface',
-        description: 'Meme token marketing platform',
-        url: 'https://coinface.fun',
-        icons: ['/favicon.ico']
-      },
-      themeMode: 'dark',
-      networks: [solana],
-      adapters: [solanaAdapter],
-      showWallets: true,
-      themeVariables: {
-        '--w3m-accent': '#8b5cf6' // Purple accent
-      }
-    });
-    
-    console.log('ReownAppKitProvider: AppKit created successfully with Solana adapter');
-  } catch (error) {
-    console.error('ReownAppKitProvider: Error creating AppKit:', error);
-  }
+  createAppKit({
+    projectId,
+    metadata: {
+      name: 'Coinface',
+      description: 'Meme token marketing platform',
+      url: 'https://coinface.fun',
+      icons: ['/favicon.ico']
+    },
+    themeMode: 'dark',
+    networks: [solana],
+    adapters: [solanaAdapter],
+    showWallets: true,
+    themeVariables: {
+      '--w3m-accent': '#8b5cf6' // Purple accent
+    }
+  });
+  
+  console.log('ReownAppKitProvider: AppKit created successfully with Solana adapter');
+} catch (error) {
+  console.error('ReownAppKitProvider: Error creating AppKit:', error);
 }
 
 export function ReownAppKitProvider({ children }: ReownAppKitProviderProps) {
