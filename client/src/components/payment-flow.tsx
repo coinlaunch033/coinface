@@ -110,9 +110,9 @@ export default function PaymentFlow({
       const requiredAmount = parseFloat(cleanAmount) + 0.0001;
       
       if (solBalance < requiredAmount) {
-        setError(`Insufficient balance. You need at least ${requiredAmount.toFixed(3)} SOL (including fees). Current balance: ${solBalance.toFixed(4)} SOL`);
+        setError(`Insufficient balance. You need at least 0.01 SOL (including fees). Current balance: ${solBalance.toFixed(4)} SOL`);
         setPaymentStep('error');
-        onPaymentError(`Insufficient balance. You need at least ${requiredAmount.toFixed(3)} SOL (including fees). Current balance: ${solBalance.toFixed(4)} SOL`);
+        onPaymentError(`Insufficient balance. You need at least 0.01 SOL (including fees). Current balance: ${solBalance.toFixed(4)} SOL`);
         return;
       }
 
@@ -158,7 +158,7 @@ export default function PaymentFlow({
         onPaymentError("Insufficient balance");
         toast({
           title: "Insufficient Balance",
-          description: `You need at least ${amount} SOL to complete this transaction.`,
+          description: `You need at least 0.01 SOL to complete this transaction.`,
           variant: "destructive",
         });
       } else {
