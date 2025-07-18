@@ -48,7 +48,7 @@ export default function PaymentFlow({
       setError(null);
 
       // Get latest blockhash
-      const { blockhash } = await connection.getLatestBlockhash();
+      const { blockhash } = await connection!.getLatestBlockhash();
 
       // Set transaction details
       transaction.recentBlockhash = blockhash;
@@ -60,9 +60,9 @@ export default function PaymentFlow({
       console.log('Transaction sent with signature:', signature);
 
       return signature;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Transaction error:', err);
-      setError(err.message);
+      setError(err.message || 'Transaction failed');
       throw err;
     } finally {
       setIsProcessing(false);
@@ -144,7 +144,7 @@ export default function PaymentFlow({
         description: `Payment of ${amount} SOL has been sent successfully.`,
       });
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Payment error:", error);
       setPaymentStep('error');
       

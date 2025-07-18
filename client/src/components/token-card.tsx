@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import type { Token } from "@shared/schema";
+import type { Token } from "@/types/token";
 
 // Helper function to handle image URLs (local vs Cloudinary)
 const getImageUrl = (logoUrl: string | null): string => {
