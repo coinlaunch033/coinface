@@ -1,11 +1,17 @@
 import { neon } from '@neondatabase/serverless';
-import { users, tokens, type User, type InsertUser, type Token, type InsertToken, type UpdateTokenTheme, type InsertMemeDropEntry, type MemeDropEntry } from "../shared/schema";
+import { type User, type InsertUser, type Token, type InsertToken, type UpdateTokenTheme, type InsertMemeDropEntry, type MemeDropEntry } from "./types";
 
 if (!process.env.DATABASE_URL) {
   throw new Error('Missing DATABASE_URL environment variable');
 }
 
 const sql = neon(process.env.DATABASE_URL);
+
+// Test database connection
+console.log('[STORAGE] Testing database connection...');
+sql`SELECT 1 as test`
+  .then(() => console.log('[STORAGE] Database connection successful'))
+  .catch((error) => console.error('[STORAGE] Database connection failed:', error));
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -48,30 +54,46 @@ export class NeonStorage implements IStorage {
   }
 
   async createToken(insertToken: InsertToken): Promise<Token> {
-    const result = await sql`
-      INSERT INTO tokens (
-        token_name, 
-        token_address, 
-        chain, 
-        logo_url, 
-        theme, 
-        button_style, 
-        font_style, 
-        view_count
-      )
-      VALUES (
-        ${insertToken.tokenName},
-        ${insertToken.tokenAddress},
-        ${insertToken.chain},
-        ${insertToken.logoUrl || null},
-        ${insertToken.theme || 'dark'},
-        ${insertToken.buttonStyle || 'rounded'},
-        ${insertToken.fontStyle || 'sans'},
-        0
-      )
-      RETURNING *
-    `;
-    return result[0] as Token;
+    try {
+      console.log("[STORAGE] Attempting to create token:", insertToken.tokenName);
+      console.log("[STORAGE] Database connection check...");
+      
+      const result = await sql`
+        INSERT INTO tokens (
+          token_name, 
+          token_address, 
+          chain, 
+          logo_url, 
+          theme, 
+          button_style, 
+          font_style, 
+          view_count
+        )
+        VALUES (
+          ${insertToken.tokenName},
+          ${insertToken.tokenAddress},
+          ${insertToken.chain},
+          ${insertToken.logoUrl || null},
+          ${insertToken.theme || 'dark'},
+          ${insertToken.buttonStyle || 'rounded'},
+          ${insertToken.fontStyle || 'sans'},
+          0
+        )
+        RETURNING *
+      `;
+      
+      console.log("[STORAGE] Token created successfully:", result[0]?.id);
+      return result[0] as Token;
+    } catch (error) {
+      console.error("[STORAGE] Error creating token:", error);
+      console.error("[STORAGE] Error details:", {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        tokenName: insertToken.tokenName,
+        hasDatabaseUrl: !!process.env.DATABASE_URL
+      });
+      throw error;
+    }
   }
 
   async getTokenByName(tokenName: string): Promise<Token | undefined> {

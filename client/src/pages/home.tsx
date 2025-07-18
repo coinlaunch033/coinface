@@ -7,13 +7,13 @@ import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import FloatingEmojis from "@/components/floating-emojis";
 import ThemeSelector from "@/components/theme-selector";
-import WalletBalance from "@/components/wallet-balance";
+
 
 import { useAppKitAccount } from '@reown/appkit-controllers/react';
 import { useAppKitProvider } from '@reown/appkit/library/react';
@@ -42,18 +42,12 @@ const step2Schema = z.object({
 type Step1Data = z.infer<typeof step1Schema>;
 type Step2Data = z.infer<typeof step2Schema>;
 
-const paymentAmounts = {
-  solana: "~0.1 SOL",
-};
 
-const chainNames = {
-  solana: "Solana",
-};
 
 export default function Home() {
   const [currentStep, setCurrentStep] = useState(1);
   const [step1Data, setStep1Data] = useState<Step1Data | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+
   const [isGenerating, setIsGenerating] = useState(false);
 
   const { toast } = useToast();
@@ -118,12 +112,7 @@ export default function Home() {
     },
   });
 
-  const paymentMutation = useMutation({
-    mutationFn: async (data: { chain: string; amount: string; tokenName: string }) => {
-      const response = await apiRequest("POST", "/api/payment", data);
-      return response.json();
-    },
-  });
+
 
   const handleStep1Submit = async (data: Step1Data) => {
     // Trigger payment directly when promote button is clicked
@@ -186,7 +175,7 @@ export default function Home() {
 
 
 
-  const handleDirectPayment = async (data: Step1Data) => {
+  const handleDirectPayment = async (_data: Step1Data) => {
     if (!isConnected || !address) {
       toast({
         title: "Wallet not connected",

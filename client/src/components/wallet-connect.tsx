@@ -1,6 +1,6 @@
 import { useAppKitAccount, useDisconnect } from '@reown/appkit-controllers/react';
 import { Button } from './ui/button';
-import { Wallet, LogOut } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 
 export function WalletConnect() {
   const { address, isConnected } = useAppKitAccount({ namespace: 'solana' });

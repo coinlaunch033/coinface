@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Link } from "wouter";
-import { ArrowLeft, Trophy, Timer, Users, Zap } from "lucide-react";
+import { ArrowLeft, Trophy, Users, Zap } from "lucide-react";
 import FloatingEmojis from "@/components/floating-emojis";
 import { useQuery } from "@tanstack/react-query";
 

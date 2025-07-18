@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./neon-storage";
-import { insertTokenSchema, updateTokenThemeSchema, insertMemeDropEntrySchema } from "../shared/schema";
+import { insertTokenSchema, updateTokenThemeSchema, insertMemeDropEntrySchema } from "./types";
 import { z } from "zod";
 import { upload, getImageUrl } from "./cloud-storage";
 
@@ -38,6 +38,32 @@ function toCamelCaseToken(token: any) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Health check endpoint
+  app.get("/api/health", async (req, res) => {
+    try {
+      console.log("[HEALTH] Health check requested");
+      console.log("[HEALTH] Database URL exists:", !!process.env.DATABASE_URL);
+      
+      // Test database connection
+      const result = await storage.getMemeDropEntryCount();
+      console.log("[HEALTH] Database test successful, count:", result);
+      
+      res.json({ 
+        status: "healthy", 
+        database: "connected",
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("[HEALTH] Health check failed:", error);
+      res.status(500).json({ 
+        status: "unhealthy", 
+        database: "disconnected",
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
   // Create token endpoint
   app.post("/api/tokens", upload.single('logo'), async (req, res) => {
     try {
@@ -67,7 +93,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           logoUrl = getImageUrl(req.file);
           console.log("[TOKEN CREATE] Logo uploaded to Cloudinary:", logoUrl);
-        } catch (uploadError) {
+        } catch (uploadError: unknown) {
           console.error("[TOKEN CREATE] Logo upload failed:", uploadError);
           // Continue without logo if upload fails
         }
@@ -86,6 +112,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       console.log("[TOKEN CREATE] Creating token in database...");
+      console.log("[TOKEN CREATE] Database URL exists:", !!process.env.DATABASE_URL);
+      console.log("[TOKEN CREATE] Validated token data:", JSON.stringify(validatedToken, null, 2));
+      
       const token = await storage.createToken(validatedToken);
       console.log("[TOKEN CREATE] Token created successfully:", token.id);
       
@@ -99,16 +128,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           email: undefined,
         });
         console.log("[TOKEN CREATE] MemeDrop entry created successfully");
-      } catch (memeDropError) {
+      } catch (memeDropError: unknown) {
         console.error("[TOKEN CREATE] Error creating MemeDrop entry:", memeDropError);
         // Continue even if MemeDrop entry fails
       }
       
       console.log("[TOKEN CREATE] Returning success response");
       res.status(201).json(token);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("[TOKEN CREATE] Error details:", error);
-      console.error("[TOKEN CREATE] Error stack:", error.stack);
+      if (error instanceof Error) {
+        console.error("[TOKEN CREATE] Error stack:", error.stack);
+      }
       
       if (error instanceof z.ZodError) {
         console.error("[TOKEN CREATE] Validation errors:", error.errors);
@@ -118,7 +149,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      if ((error as any).message && (error as any).message.includes('fetch failed')) {
+      if (error instanceof Error && error.message && error.message.includes('fetch failed')) {
         console.error("[TOKEN CREATE] Database connection failed");
         return res.status(503).json({ 
           message: "Database temporarily unavailable. Please try again later.",
@@ -129,7 +160,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("[TOKEN CREATE] Unknown error, returning 500");
       res.status(500).json({ 
         message: "Internal server error",
-        error: error.message || "Unknown error occurred"
+        error: error instanceof Error ? error.message : "Unknown error occurred"
       });
     }
   });
@@ -141,7 +172,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("[TOKEN FETCH] Looking for token:", tokenName);
       
       const token = await storage.getTokenByName(tokenName);
-      console.log("[TOKEN FETCH] Found token:", token ? token.tokenName : "null");
+      console.log("[TOKEN FETCH] Found token:", token ? token.token_name : "null");
       
       if (!token) {
         console.log("[TOKEN FETCH] Token not found for:", tokenName);
@@ -151,7 +182,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const camelCaseToken = toCamelCaseToken(token);
       console.log("[TOKEN FETCH] Returning token:", camelCaseToken.tokenName);
       res.json(camelCaseToken);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error fetching token:", error);
       // Return a more graceful error response
       res.status(503).json({ 
@@ -174,7 +205,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json(updatedToken);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error updating token theme:", error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ 
@@ -196,8 +227,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Token not found" });
       }
 
-      res.json({ viewCount: updatedToken.viewCount });
-    } catch (error) {
+      res.json({ viewCount: updatedToken.view_count });
+    } catch (error: unknown) {
       console.error("Error incrementing view count:", error);
       res.status(500).json({ message: "Internal server error" });
     }
@@ -208,7 +239,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const tokens = await storage.getAllTokens();
       res.json(tokens);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error fetching tokens:", error);
       res.status(500).json({ message: "Internal server error" });
     }
@@ -234,7 +265,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         transactionId: `tx_${Date.now()}`,
         message: "Payment processed successfully" 
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error processing payment:", error);
       res.status(500).json({ message: "Payment processing failed" });
     }
@@ -245,7 +276,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const count = await storage.getMemeDropEntryCount();
       res.json(count);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error fetching MemeDrop entry count:", error);
       res.status(500).json({ message: "Internal server error" });
     }
@@ -256,7 +287,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedEntry = insertMemeDropEntrySchema.parse(req.body);
       const entry = await storage.createMemeDropEntry(validatedEntry);
       res.status(201).json(entry);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error creating MemeDrop entry:", error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ 
@@ -272,7 +303,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const entries = await storage.getAllMemeDropEntries();
       res.json(entries);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error fetching all MemeDrop entries:", error);
       res.status(500).json({ message: "Internal server error" });
     }

@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Copy, ExternalLink, Lightbulb, Share2, Twitter, Send, BarChart2, LineChart, Activity, TrendingUp, Circle, Hexagon, Square, MessageCircle } from "lucide-react";
+import { Copy, ExternalLink, Lightbulb, Share2, Twitter, Send, BarChart2, LineChart, Activity, TrendingUp, Circle, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -45,7 +45,7 @@ const chainColors = {
 const urlTemplates = {
   dexscreener: (chain: string, tokenAddress: string) => `https://dexscreener.com/${chain}/${tokenAddress}`,
   dextools: (chain: string, tokenAddress: string) => `https://www.dextools.io/app/en/${chain}/pair-explorer/${tokenAddress}`,
-  gmgn: (chain: string, tokenAddress: string) => `https://gmgn.ai/sol/token/${tokenAddress}`,
+  gmgn: (_chain: string, tokenAddress: string) => `https://gmgn.ai/sol/token/${tokenAddress}`,
   birdeye: (chain: string, tokenAddress: string) => `https://birdeye.so/token/${tokenAddress}?chain=${chain}`,
 };
 
@@ -114,12 +114,7 @@ const socialLinks = [
   { name: "Telegram", icon: Send, color: "bg-blue-500 hover:bg-blue-600", url: "https://t.me/share/url" },
 ];
 
-const chainIcons = {
-  solana: Circle,
-  ethereum: Hexagon,
-  base: Square,
-  polygon: Hexagon,
-};
+
 
 export default function TokenCard({ token, className }: TokenCardProps) {
   const { toast } = useToast();

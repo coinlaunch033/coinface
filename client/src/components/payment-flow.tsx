@@ -10,7 +10,6 @@ import { LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from '@solana
 
 interface PaymentFlowProps {
   amount: string;
-  chain: string;
   tokenName: string;
   onPaymentSuccess: () => void;
   onPaymentError: (error: string) => void;
@@ -21,7 +20,6 @@ const RECIPIENT_ADDRESS = "5xDHKXERdpPGoY3bofLcjc4rRrMy22qRem588PgdR2RP";
 
 export default function PaymentFlow({ 
   amount, 
-  chain, 
   tokenName, 
   onPaymentSuccess, 
   onPaymentError 
