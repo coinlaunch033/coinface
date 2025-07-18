@@ -9,5 +9,4 @@ uploads/
 .idea/
 *.md
 !README.md
-server/
 shared/ 
