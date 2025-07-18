@@ -9,11 +9,26 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+
+// Configure middleware for different content types
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // Serve old uploaded files for backward compatibility
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+// Add CORS headers for API requests
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
 
 app.use((req, res, next) => {
   const start = Date.now();
