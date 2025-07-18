@@ -10,5 +10,4 @@ uploads/
 *.md
 !README.md
 server/
-shared/
-supabase/ 
+shared/ 
