@@ -1,5 +1,5 @@
 import { neon } from '@neondatabase/serverless';
-import { users, tokens, type User, type InsertUser, type Token, type InsertToken, type UpdateTokenTheme, type InsertMemeDropEntry, type MemeDropEntry } from "@shared/schema";
+import { users, tokens, type User, type InsertUser, type Token, type InsertToken, type UpdateTokenTheme, type InsertMemeDropEntry, type MemeDropEntry } from "../shared/schema";
 
 if (!process.env.DATABASE_URL) {
   throw new Error('Missing DATABASE_URL environment variable');

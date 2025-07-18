@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import FloatingEmojis from "@/components/floating-emojis";
 import TokenCard from "@/components/token-card";
 import { apiRequest } from "@/lib/queryClient";
-import type { Token } from "@shared/schema";
+import type { Token } from "@/types/token";
 
 // Helper function to handle image URLs (local vs Cloudinary)
 const getImageUrl = (logoUrl: string | null): string => {
