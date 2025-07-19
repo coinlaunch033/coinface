@@ -1,0 +1,26 @@
+{
+  "name": "coinface-server",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx index.ts",
+    "build": "tsc",
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
+    "@types/multer": "^2.0.0",
+    "cloudinary": "^1.41.3",
+    "dotenv": "^17.2.0",
+    "express": "^4.21.2",
+    "multer": "^2.0.1",
+    "multer-storage-cloudinary": "^4.0.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/express": "4.17.21",
+    "@types/node": "20.16.11",
+    "tsx": "^4.19.1",
+    "typescript": "5.6.3"
+  }
+} 
