@@ -12,14 +12,19 @@ const sql = neon(process.env.DATABASE_URL);
 
 // Test database connection with timeout
 console.log('[STORAGE] Testing database connection...');
-Promise.race([
-  sql`SELECT 1 as test`,
-  new Promise((_, reject) => 
-    setTimeout(() => reject(new Error('Database connection timeout')), 10000)
-  )
-])
-  .then(() => console.log('[STORAGE] Database connection successful'))
-  .catch((error) => console.error('[STORAGE] Database connection failed:', error));
+console.log('[STORAGE] Database URL exists:', !!process.env.DATABASE_URL);
+
+// Only test connection in development to avoid issues in production
+if (process.env.NODE_ENV === 'development') {
+  Promise.race([
+    sql`SELECT 1 as test`,
+    new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Database connection timeout')), 10000)
+    )
+  ])
+    .then(() => console.log('[STORAGE] Database connection successful'))
+    .catch((error) => console.error('[STORAGE] Database connection failed:', error));
+}
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
